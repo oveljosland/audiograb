@@ -1,26 +1,29 @@
 #!/usr/bin/env python3
 
 import time
-#import usb.core
+import subprocess
 
+def getmnt():
+	try:
+		output = subprocess.run(
+			["lsblk", "-o", "NAME,RM,MOUNTPOINT", "-nr"],
+			capture_output=True,
+			text=True,
+			check=True
+		)
+		for l in output.stdout.splitlines():
+			name, rm, mnt = line.split(maxsplit=2)
+			if rm == "1" and mnt != "":
+				return mnt
+	except Exception:
+		pass
+	return None
 
-# TODO: call 'lsusb' get mount location
-#mntloc = pass
-
-class CardReader:
-	vendor = ''
-	product = ''
-
-reader = CardReader()
-
-reader.vendor = 'banana'
-reader.product = 'sd'
-
-print(reader.vendor)
-print(reader.product)
-
-
-start_time = time.strftime("%Y-%m-%d %H:%M:%S")
-print(start_time)
-
-#dev = usb.core.find()
+if __name__ == "__main__":
+	start = time.strftime("%Y-%m-%d %H:%M:%S")
+	mnt = getmnt()
+	if mnt:
+		print(f"mnt: {mnt}")
+	else:
+		# log: not mounted?
+		print("not mounted")
