@@ -16,3 +16,14 @@ def getmnt():
 	except Exception:
 		pass
 	return None
+
+def get_cpu_serial():
+	error = "NO_CPU_SERIAL_ID"
+	try:
+		with open('/proc/cpuinfo', 'r') as f:
+			for line in f:
+				if line.startswith('Serial'):
+					return line.split(":", 1)[1].strip()
+	except OSError:
+		pass
+	return error

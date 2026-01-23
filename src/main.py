@@ -21,7 +21,7 @@ def sysconfig(sd_mount_directory, sd_card):
 
 	project_id = 'NA'
 	config_id = 'NA'
-	cpu_id = get_cpu_id()
+	cpu_serial = get_cpu_serial()
 
 if __name__ == "__main__":
 	start = time.strftime("%Y-%m-%d %H:%M:%S")
