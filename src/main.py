@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
+#python -m src.main
 
 import time
 import subprocess
+from .utils import getmnt
 
-def getmnt():
-	try:
-		output = subprocess.run(
-			["lsblk", "-o", "NAME,RM,MOUNTPOINT", "-nr"],
-			capture_output=True,
-			text=True,
-			check=True
-		)
-		for l in output.stdout.splitlines():
-			name, rm, mnt = line.split(maxsplit=2)
-			if rm == "1" and mnt != "":
-				return mnt
-	except Exception:
-		pass
-	return None
+def sysconfig(sd_mount_directory, sd_card):
+	working_directory_name = 'monitoring-tmp'
+	upload_directory_name = 'audio'
+	working_directory = os.path.join('/tmp', working_directory_name)
+	local_upload_directory = upload_directory_name
+
+	if sd_card:
+		upload_directory = os.path.join(sd_mount_directory, upload_directory_name)
+		
+		if os.path.exists(local_upload_directory) and os.path.isdir(local_upload_directory):
+			# TODO: merge dirs
+	else:
+		upload_directory = local_upload_directory
+
+	project_id = 'NA'
+	config_id = 'NA'
+	cpu_id = get_cpu_id()
 
 if __name__ == "__main__":
 	start = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -25,5 +29,5 @@ if __name__ == "__main__":
 	if mnt:
 		print(f"mnt: {mnt}")
 	else:
-		# log: not mounted?
+		# TODO: log: not mounted
 		print("not mounted")
