@@ -214,3 +214,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Google Cloud Storage
+gcs_*.json
+src/test/upload/
+
+# macOS
+.DS_Store
