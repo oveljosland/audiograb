@@ -1,0 +1,23 @@
+{
+	"compression": {
+		"enabled": true,
+
+		"audio": {
+			"codec": "opus",
+			"bitrate_kbps": 24,
+			"sample_rate": 16000
+		},
+
+		"image": {
+			"codec": "jpeg",
+			"jpeg_quality": 70,
+			"max_width": 1920,
+			"max_height": 1080
+		},
+
+		"video": {
+		},
+
+		"skip_already_compressed": true
+	}
+}
