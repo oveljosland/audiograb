@@ -43,14 +43,7 @@ def get_mountable_partitions(device):
 		partitions.append(partition)
 
 	return partitions if partitions else None
-
-""" return the largest mountable partition device path """
-def get_largest_mountable_partition(device):
-	partitions = get_mountable_partitions(device)
-	if not partitions:
-		return None
-	largest = max(partitions, key=lambda p: p["size"])
-	return f"/dev/{largest['name']}"
+	
 
 """ return list of removable devices with mountable partitions """
 def get_removable_devices(return_largest=False):
@@ -69,12 +62,16 @@ def get_removable_devices(return_largest=False):
 		if not device.get('children'):
 			continue # skip if no partitions
 		
-		if return_largest:
-			partitions = get_largest_mountable_partition(device)
-		else:
-			partitions = get_mountable_partitions(device)		
+		partitions = get_mountable_partitions(device)
+		
+		if not partitions:
+				return None
 
-		if partitions:
+		if return_largest:
+			largest = max(partitions, key=lambda p: p["size"])
+			return f"/dev/{largest['name']}"
+
+		else:
 			for partition in partitions:
 				removable.append(f"/dev/{partition['name']}")
 

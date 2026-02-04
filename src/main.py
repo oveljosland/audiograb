@@ -36,7 +36,7 @@ if __name__ == "__main__":
 
 	dev = devices.get_block_devices_json()
 
-	print(devices.get_removable_devices())
+	print(devices.get_removable_devices(return_largest=True))
 
 
 
