@@ -34,9 +34,15 @@ if __name__ == "__main__":
 	start = time.strftime("%Y-%m-%d %H:%M:%S")
 	config = load_config('src/config/example.json')
 
-	dev = devices.get_block_devices_json()
+	device = devices.get_removable_devices(return_largest=True)
+	print(device)
+	
+	mount_point = devices.mount(device)
+	print(mount_point)
 
-	print(devices.get_removable_devices(return_largest=True))
+	result = devices.unmount(device)
+	print(result)
+	
 
 
 

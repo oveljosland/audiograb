@@ -63,7 +63,7 @@ def get_removable_devices(return_largest=False):
 			continue # skip if no partitions
 		
 		partitions = get_mountable_partitions(device)
-		
+
 		if not partitions:
 				return None
 
@@ -76,3 +76,42 @@ def get_removable_devices(return_largest=False):
 				removable.append(f"/dev/{partition['name']}")
 
 	return removable if removable else None
+
+
+def mount(device):
+	return subprocess.run([
+		"udisksctl", "mount", "-b", device
+	],
+	capture_output=True,
+	text=True
+	)
+
+def unmount(device):
+	return subprocess.run([
+		"udisksctl", "unmount", "-b", device
+	],
+	capture_output=True,
+	text=True
+	)
+
+"""
+def power_off_device(device):
+
+Arranges for the drive to be safely removed and powered off.
+On the OS side this includes ensuring that no process is using the drive, then
+requesting that in-flight buffers and caches are committed to stable storage.
+The exact steps for powering off the drive depends on the drive itself and the interconnect used.
+For drives connected through USB, the effect is that the USB device will be deconfigured followed by
+disabling the upstream hub port it is connected to.
+
+Note that as some physical devices contain multiple drives (for example 4-in-1 flash card reader USB devices) powering off one drive may affect other drives.
+As such there are not a lot of guarantees associated with performing this action.
+Usually the effect is that the drive disappears as if it was unplugged.
+
+	output = subprocess.run([
+		"udisksctl", "power-off", device
+	],
+	capture_output=True,
+	text=True
+	)
+"""
