@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-#python -m src.main
-# test
+# python -m src.main
+
 import os
 import time
 import json
 
-from .utils import time_synced
-from .compression import compress_if_needed
+import src.utils.devices as devices
+import src.utils.conversion as conv
+
+
 from google.cloud import storage
 
 
@@ -32,20 +34,15 @@ if __name__ == "__main__":
 	start = time.strftime("%Y-%m-%d %H:%M:%S")
 	config = load_config('src/config/example.json')
 
-	"""
-	mnt = getmnt()
-	if mnt:
-		print(f"mnt: {mnt}")
-	else:
-		# TODO: log: not mounted
-		print("not mounted")
-	"""
+	dev = devices.get_block_devices_json()
 
-	test_dir = "src/test/upload"
+	print(devices.get_removable_devices())
 
-	client = storage.Client.from_service_account_json("src/gcs_sa.json")
-	bucket = client.bucket("audiograb-development")
-	uploaded = upload_directory_to_bucket(test_dir, bucket, config)
-	print(f"uploaded {len(uploaded)} files")
+
+
+	#client = storage.Client.from_service_account_json("src/gcs_sa.json")
+	#bucket = client.bucket("audiograb-development")
+	#uploaded = upload_directory_to_bucket(test_dir, bucket, config)
+	#print(f"uploaded {len(uploaded)} files")
 	#print(time_synced())
 
