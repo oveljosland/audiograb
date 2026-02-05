@@ -79,20 +79,28 @@ def get_removable_devices(return_largest=False):
 
 
 def mount(device):
-	return subprocess.run([
-		"udisksctl", "mount", "-b", device
-	],
-	capture_output=True,
-	text=True
-	)
+	try:
+		return subprocess.run([
+			"udisksctl", "mount", "-b", device
+		],
+		capture_output=True,
+		text=True
+		)
+	except CalledProcessError as e:
+		print(f"error mounting {device}: {e}")
+		return None
 
 def unmount(device):
-	return subprocess.run([
+	try:
+		return subprocess.run([
 		"udisksctl", "unmount", "-b", device
-	],
-	capture_output=True,
-	text=True
-	)
+		],
+		capture_output=True,
+		text=True
+		)
+	except CalledProcessError as e:
+		print(f"error unmounting {device}: {e}")
+		return None
 
 """
 def power_off_device(device):
