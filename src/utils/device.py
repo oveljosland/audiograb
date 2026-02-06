@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import subprocess
 
@@ -79,28 +80,33 @@ def get_removable_devices(return_largest=False):
 
 
 def mount(device):
-	try:
-		return subprocess.run([
-			"udisksctl", "mount", "-b", device
-		],
-		capture_output=True,
-		text=True
-		)
-	except CalledProcessError as e:
-		print(f"error mounting {device}: {e}")
-		return None
+	return subprocess.run([
+		"udisksctl", "mount", "-b", device
+	],
+	capture_output=True,
+	text=True
+	).stdout.split()[-1] # return mountpoint from stdout
 
 def unmount(device):
-	try:
-		return subprocess.run([
+	return subprocess.run([
 		"udisksctl", "unmount", "-b", device
-		],
-		capture_output=True,
-		text=True
-		)
-	except CalledProcessError as e:
-		print(f"error unmounting {device}: {e}")
-		return None
+	],
+	capture_output=True,
+	text=True
+	).stderr # return error
+
+
+def power_off(device):
+	# normalise (e.g. /dev/sdb2 → /dev/sdb)
+	device = re.sub(r"\d+$", "", device)
+
+	return subprocess.run([
+		"udisksctl", "power-off", "-b", device
+	],
+	capture_output=True,
+	text=True,
+	check=True,
+	).stdout
 
 """
 def power_off_device(device):

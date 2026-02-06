@@ -5,7 +5,7 @@ import os
 import time
 import json
 
-import src.utils.devices as devices
+import src.utils.device as device
 import src.utils.conversion as conv
 
 
@@ -31,18 +31,20 @@ def upload_directory_to_bucket(upload_directory, bucket, config):
 
 
 if __name__ == "__main__":
-	start = time.strftime("%Y-%m-%d %H:%M:%S")
+	start_time = time.strftime("%Y-%m-%d %H:%M:%S")
 	config = load_config('src/config/example.json')
 
-	device = devices.get_removable_devices(return_largest=True)
-	print(device)
-	
-	mount_point = devices.mount(device)
+	device_path = device.get_removable_devices(return_largest=True)
+	print(device_path)
+
+	mount_point = device.mount(device_path)
 	print(mount_point)
 
-	result = devices.unmount(device)
-	print(result)
-	
+	unmount_error = device.unmount(device_path)
+	if unmount_error:
+		print(f"error unmounting: {device_path}")
+
+	#print(device.power_off(device_path))
 
 
 
@@ -51,4 +53,3 @@ if __name__ == "__main__":
 	#uploaded = upload_directory_to_bucket(test_dir, bucket, config)
 	#print(f"uploaded {len(uploaded)} files")
 	#print(time_synced())
-
