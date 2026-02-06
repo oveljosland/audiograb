@@ -34,19 +34,27 @@ if __name__ == "__main__":
 	start_time = time.strftime("%Y-%m-%d %H:%M:%S")
 	config = load_config('src/config/example.json')
 
-	device_path = device.get_removable_devices(return_largest=True)
-	print(device_path)
+	device_path = device.get_removable_devices()
+	print(f"removable devices: {device_path}")
 
-	mount_point = device.mount(device_path)
-	print(mount_point)
+	if not device_path:
+		exit(1)
+	
+	partitions = device.get_partitions(device_path)
+	print(f"partitions: {partitions}")
 
-	unmount_error = device.unmount(device_path)
-	if unmount_error:
-		print(f"error unmounting: {device_path}")
-
-	#print(device.power_off(device_path))
+	mount_points = device.mount_all_partitions(device_path)
+	print(f"mount points: {mount_points}")
 
 
+	e = device.unmount_all_partitions(partitions)
+	print(e)
+
+
+
+	#print(f"trying to unmount {device_path}")
+	#e = device.unmount(device_path)
+	#print(e)
 
 	#client = storage.Client.from_service_account_json("src/gcs_sa.json")
 	#bucket = client.bucket("audiograb-development")

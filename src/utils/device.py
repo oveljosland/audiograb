@@ -3,7 +3,7 @@ import re
 import json
 import subprocess
 
-MOUNTABLE_FILESYSTEMS = {"exfat", "vfat", "ext4", "ntfs"} # good enough
+
 
 def get_block_devices_json():
 	output = subprocess.run([
@@ -16,38 +16,8 @@ def get_block_devices_json():
 	return json.loads(output.stdout)
 
 
-def has_mounted_partitions(device):
-	return any(
-		child.get("type") == "part" and
-		child.get("mountpoints") for child in device.get("children", [])
-	)
 
-
-""" return list of all mountable partitions for a device """
-def get_mountable_partitions(device):
-	if has_mounted_partitions(device):
-		return None
-
-	partitions = []
-
-	for partition in device.get("children", []):
-		if partition.get("type") != "part":
-			continue # skip non-partitions
-
-		filesystem = partition.get("fstype")
-
-		if filesystem not in MOUNTABLE_FILESYSTEMS:
-			continue
-		if partition.get("size", 0) < 16 << 20: # 16MB
-			continue
-
-		partitions.append(partition)
-
-	return partitions if partitions else None
-	
-
-""" return list of removable devices with mountable partitions """
-def get_removable_devices(return_largest=False):
+def get_removable_devices():
 	devices = get_block_devices_json()
 	removable = []
 
@@ -58,50 +28,78 @@ def get_removable_devices(return_largest=False):
 			continue # skip non-removable
 		if not device.get('size', 0):
 			continue # skip empty
-		if device.get('mountpoints'):
-			continue # skip already mounted
+
 		if not device.get('children'):
 			continue # skip if no partitions
-		
-		partitions = get_mountable_partitions(device)
 
-		if not partitions:
-				return None
-
-		if return_largest:
-			largest = max(partitions, key=lambda p: p["size"])
-			return f"/dev/{largest['name']}"
-
-		else:
-			for partition in partitions:
-				removable.append(f"/dev/{partition['name']}")
-
-	return removable if removable else None
+		# return device path
+		return f"/dev/{device['name']}"
 
 
-def mount(device):
-	return subprocess.run([
-		"udisksctl", "mount", "-b", device
+
+def get_partitions(device_path, return_largest=False):
+	devices = get_block_devices_json()
+	for device in devices['blockdevices']:
+		if f"/dev/{device['name']}" == device_path:
+			partitions = device.get("children", [])
+			if return_largest and partitions:
+				largest = max(partitions, key=lambda p: p["size"])
+				return [f"/dev/{largest['name']}"]
+			return [f"/dev/{p['name']}" for p in partitions]
+	return []
+	
+
+
+def mount(device_path):
+	output = subprocess.run([
+		"udisksctl", "mount", "-b", device_path
 	],
 	capture_output=True,
 	text=True
-	).stdout.split()[-1] # return mountpoint from stdout
+	)
+	if "already mounted" in output.stderr or output.returncode != 0:
+		# find mount point
+		devices = get_block_devices_json()
+		for device in devices['blockdevices']:
+			for child in device.get('children', []):
+				if f"/dev/{child['name']}" == device_path:
+					mounts = child.get('mountpoints', [])
+					if mounts and mounts[0]:
+						return mounts[0]
+		# failed to find mount point
+		raise RuntimeError(f"failed to mount {device_path}: {output.stderr}")
+	
+	return output.stdout.split()[-1] # return mountpoint from stdout
 
-def unmount(device):
+
+def unmount(device_path):
 	return subprocess.run([
-		"udisksctl", "unmount", "-b", device
+		"udisksctl", "unmount", "-b", device_path
 	],
 	capture_output=True,
 	text=True
 	).stderr # return error
 
 
-def power_off(device):
-	# normalise (e.g. /dev/sdb2 → /dev/sdb)
-	device = re.sub(r"\d+$", "", device)
+def mount_all_partitions(device_path):
+	partitions = get_partitions(device_path)
+	mount_points = []
+	for partition in partitions:
+		mount_point = mount(partition)
+		mount_points.append(mount_point)
+	return mount_points
+
+def unmount_all_partitions(device_paths):
+	for device_path in device_paths:
+		unmount(device_path)
+
+
+def power_off(device_path):
+	# normalise, /dev/sda2 -> /dev/sda
+	device_path = re.sub(r"\d+$", "", device_path)
 
 	return subprocess.run([
-		"udisksctl", "power-off", "-b", device
+		"udisksctl", "power-off", "-b", device_path
 	],
 	capture_output=True,
 	text=True,
