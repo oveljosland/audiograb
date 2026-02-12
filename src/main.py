@@ -4,12 +4,14 @@
 import os
 import time
 import json
+import shutil
+import uuid
 
 import src.utils.device as device
 import src.utils.conversion as conv
 
 
-from google.cloud import storage
+
 
 
 def load_config(path):
@@ -24,15 +26,35 @@ def upload_directory_to_bucket(upload_directory, bucket, config):
 			local_path = os.path.join(root, local_file)
 			remote_path = local_path[len(upload_directory)+1:]
 			blob = bucket.blob(remote_path)
-			compressed = compress_if_needed(local_path, config)
+			compressed = conv.compress_if_needed(local_path, config)
 			blob.upload_from_filename(compressed)
 			uploaded.append(local_path)
 	return uploaded
 
 
-if __name__ == "__main__":
-	start_time = time.strftime("%Y-%m-%d %H:%M:%S")
+def create_upload_directory(config):
+	timestamp = time.strftime(config.get('date_time_format', "%Y%m%d-%H%M%S"))
+	uid = str(uuid.uuid4())[:8] # unique id
+	upload_dir = os.path.join(
+		'/tmp', f"{config.get('project_name', 'audiograb')}-{timestamp}-{uid}"
+	)
+	os.makedirs(os.path.join(upload_dir, "data"), exist_ok=True)
+	os.makedirs(os.path.join(upload_dir, "log", "telemetry"), exist_ok=True)
+	return upload_dir
+
+
+
+
+if __name__ == "__main__": 
+
+	"""
+	TODO:
+	- check if new config available from server
+	"""
+
 	config = load_config('src/config/example.json')
+
+	start_time = time.strftime(config.get('date_time_format', "%Y%m%d-%H%M%S"))
 
 	device_path = device.get_removable_devices()
 	print(f"removable devices: {device_path}")
@@ -46,18 +68,39 @@ if __name__ == "__main__":
 	mount_points = device.mount_all_partitions(device_path)
 	print(f"mount points: {mount_points}")
 
+	upload_dir = create_upload_directory(config)
+	print(f"upload directory: {upload_dir}")
 
-	e = device.unmount_all_partitions(partitions)
-	print(e)
+	# offload files from storage device
+	device.offload(mount_points, upload_dir)
+	print(f"moved files from {mount_points} to {upload_dir}")
+
+	# compress the upload directory
+	cm = conv.compress_if_needed(upload_dir, config)
+	print(f"compressed upload directory: {cm}")
+	
+
+	"""
+	TODO:
+	What are the rules for removing /tmp?
+	- is it done on boot? if not: remove upload dir after upload
+	"""
+
+
+	# unmount and power off device
+	try:
+		
+		device.unmount_all_partitions(partitions)
+		print("unmounted partitions")
+
+		"""
+		device.power_off(device_path)
+		print("powered off device")
+		"""
+
+	except Exception as e:
+		print(f"error while unmounting/powering off: {e}")
 
 
 
-	#print(f"trying to unmount {device_path}")
-	#e = device.unmount(device_path)
-	#print(e)
 
-	#client = storage.Client.from_service_account_json("src/gcs_sa.json")
-	#bucket = client.bucket("audiograb-development")
-	#uploaded = upload_directory_to_bucket(test_dir, bucket, config)
-	#print(f"uploaded {len(uploaded)} files")
-	#print(time_synced())
