@@ -23,4 +23,4 @@ Edit ``sudo visudo`` and add
 ```deployuser ALL=(root) NOPASSWD: /usr/bin/rpi-eeprom-config, /usr/bin/rpi-eeprom-update```
 
 ## scheduling the next wake time
-Write scheduler ----> C program ????
+Write scheduler ----> C program (helper with some privileges) ????
