@@ -221,3 +221,6 @@ src/test/upload/
 
 # macOS
 .DS_Store
+
+# project specific
+testmedia/
