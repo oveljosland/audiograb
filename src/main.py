@@ -11,7 +11,13 @@ import src.utils.device as device
 import src.utils.conversion as conv
 
 
-
+def ntp_synced():
+	output = subprocess.run(
+		["timedatectl", "show", "-p", "NTPSynchronized", "--value"],
+		capture_output=True,
+		text=True
+	)
+	return output.stdout.strip() == "yes"
 
 
 def load_config(path):
