@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import shutil
 import subprocess
 
 
@@ -47,7 +48,7 @@ def get_partitions(device_path, return_largest=False):
 				return [f"/dev/{largest['name']}"]
 			return [f"/dev/{p['name']}" for p in partitions]
 	return []
-	
+
 
 
 def mount(device_path):
@@ -72,6 +73,7 @@ def mount(device_path):
 	return output.stdout.split()[-1] # return mountpoint from stdout
 
 
+
 def unmount(device_path):
 	return subprocess.run([
 		"udisksctl", "unmount", "-b", device_path
@@ -79,6 +81,7 @@ def unmount(device_path):
 	capture_output=True,
 	text=True
 	).stderr # return error
+
 
 
 def mount_all_partitions(device_path):
@@ -89,9 +92,12 @@ def mount_all_partitions(device_path):
 		mount_points.append(mount_point)
 	return mount_points
 
+
+
 def unmount_all_partitions(device_paths):
 	for device_path in device_paths:
 		unmount(device_path)
+
 
 
 def power_off(device_path):
@@ -105,6 +111,34 @@ def power_off(device_path):
 	text=True,
 	check=True,
 	).stdout
+
+
+# offload files from mount points to dest, categorising dirs
+def offload(mount_points, dest):
+	"""
+	TODO:
+	- return list of moved files
+	"""
+	def categorise_path(path):
+		path = path.lower()
+		if 'log' in path or 'telemetry' in path:
+			return os.path.join('log', 'telemetry')
+		return 'data'
+	moved = []
+	for mnt in mount_points:
+		for root, _, files in os.walk(mnt):
+			for file in files:
+				src = os.path.join(root, file)
+				print(f"src: {src}")
+				rel = os.path.relpath(src, mnt)
+				print(f"rel: {rel}")
+				cat = categorise_path(rel)
+				print(f"cat: {cat}")
+				dst = os.path.join(dest, cat, rel)
+				print(f"dst: {dst}")
+				os.makedirs(os.path.dirname(dst), exist_ok=True)
+				shutil.move(src, dst)
+
 
 """
 def power_off_device(device):
