@@ -1,4 +1,6 @@
 # notes
+
+## access to udisks2
 udisksctl needs password to mount/unmount - add polkit rule.
 
 put in /etc/polkit-1/rules.d/50-user-mount-umount.rules
@@ -13,3 +15,6 @@ polkit.addRule(function(action, subject) {
 });
 
 sudo chmod 644 /etc/polkit-1/rules.d/50-user-mount-umount.rules
+
+## access to ``eeprom-config''
+Edit ``sudo visudo'' and add ``deployuser ALL=(root) NOPASSWD: /usr/bin/rpi-eeprom-config, /usr/bin/rpi-eeprom-update''
