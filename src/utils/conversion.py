@@ -38,6 +38,12 @@ def is_compressible(path, mime, config):
 
 # TODO: include other formats/codecs
 # this is jsut for testing
+
+"""
+TODO:
+- consider more descriptive return values for these routines?
+"""
+
 def compress_audio_opus(input_path, config):
 	if not os.path.isfile(input_path):
 		raise FileNotFoundError(input_path)
@@ -95,7 +101,7 @@ def compress_if_needed(path, config):
 		return compress_audio_opus(path, config["compression"]["audio"])
 	
 	if mime.startswith("image/"):
-		return compress_audio_jpeg(path, config["compression"]["image"])
+		return compress_image_jpeg(path, config["compression"]["image"])
 	
 	"""
 	if mime.startswith("video/"):
@@ -103,5 +109,3 @@ def compress_if_needed(path, config):
 	"""
 
 	return path
-
-
