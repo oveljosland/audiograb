@@ -3,8 +3,9 @@
 ## access to udisks2
 udisksctl needs password to mount/unmount - add polkit rule.
 
-put in /etc/polkit-1/rules.d/50-user-mount-umount.rules
+put in ``/etc/polkit-1/rules.d/50-user-mount-umount.rules'',
 
+``
 polkit.addRule(function(action, subject) {
         if ((action.id == "org.freedesktop.udisks2.filesystem-mount" ||
                 action.id == "org.freedesktop.udisks2.filesystem-unmount" ||
@@ -13,6 +14,7 @@ polkit.addRule(function(action, subject) {
                         return polkit.Result.YES;
                 }
 });
+''
 
 sudo chmod 644 /etc/polkit-1/rules.d/50-user-mount-umount.rules
 
