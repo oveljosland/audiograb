@@ -21,3 +21,6 @@ sudo chmod 644 /etc/polkit-1/rules.d/50-user-mount-umount.rules
 ## access to ``eeprom-config''
 Edit ``sudo visudo`` and add
 ```deployuser ALL=(root) NOPASSWD: /usr/bin/rpi-eeprom-config, /usr/bin/rpi-eeprom-update```
+
+## scheduling the next wake time
+Write scheduler ----> C program ????
