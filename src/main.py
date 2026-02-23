@@ -7,6 +7,7 @@ import json
 import shutil
 import uuid
 
+import src.utils.rtc as rtc
 import src.utils.device as device
 import src.utils.conversion as conv
 
@@ -57,9 +58,9 @@ if __name__ == "__main__":
 	TODO:
 	- check if new config available from server
 	"""
-
+	
 	config = load_config('src/config/example.json')
-
+	"""
 	start_time = time.strftime(config.get('date_time_format', "%Y%m%d-%H%M%S"))
 
 	device_path = device.get_removable_devices()
@@ -84,6 +85,9 @@ if __name__ == "__main__":
 	# compress the upload directory
 	cm = conv.compress_if_needed(upload_dir, config)
 	print(f"compressed upload directory: {cm}")
+	"""
+
+	rtc.set_interval(config)
 	
 
 	"""
@@ -92,20 +96,17 @@ if __name__ == "__main__":
 	- is it done on boot? if not: remove upload dir after upload
 	"""
 
-
+	"""
 	# unmount and power off device
 	try:
-		
 		device.unmount_all_partitions(partitions)
 		print("unmounted partitions")
-
-		"""
 		device.power_off(device_path)
 		print("powered off device")
-		"""
 
 	except Exception as e:
 		print(f"error while unmounting/powering off: {e}")
+	"""
 
 
 

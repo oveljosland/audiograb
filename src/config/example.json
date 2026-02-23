@@ -22,5 +22,10 @@
 		},
 
 		"skip_already_compressed": true
+	},
+
+	"scheduler": {
+		"enabled": true,
+		"interval_minutes": 5
 	}
 }
