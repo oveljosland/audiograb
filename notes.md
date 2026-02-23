@@ -24,3 +24,11 @@ Edit ``sudo visudo`` and add
 
 ## scheduling the next wake time
 Write scheduler ----> C program (helper with some privileges) ????
+```
+# set wake interval in minutes
+def set_interval(config):
+	if not config["scheduler"]["enabled"]:
+		return
+	minutes = config["scheduler"]["interval_minutes"]
+	output = subprocess.run(["wakectl", minutes*60])
+```
