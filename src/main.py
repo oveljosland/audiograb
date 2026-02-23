@@ -8,6 +8,7 @@ import shutil
 import uuid
 
 import src.utils.rtc as rtc
+import src.utils.bat as bat
 import src.utils.device as device
 import src.utils.conversion as conv
 
@@ -87,7 +88,7 @@ if __name__ == "__main__":
 	print(f"compressed upload directory: {cm}")
 	"""
 
-	rtc.set_interval(config)
+	print(bat.get_voltage())
 	
 
 	"""
