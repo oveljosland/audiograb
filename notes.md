@@ -32,3 +32,8 @@ def set_interval(config):
 	minutes = config["scheduler"]["interval_minutes"]
 	output = subprocess.run(["wakectl", minutes*60])
 ```
+
+## install script
+
+sudo visudo
+username ALL=(root) NOPASSWD: /path/to/wakectl /sys/class/rtc/*
