@@ -33,7 +33,8 @@ def set_interval(config):
 	output = subprocess.run(["wakectl", minutes*60])
 ```
 
-## install script
-
-sudo visudo
-username ALL=(root) NOPASSWD: /path/to/wakectl /sys/class/rtc/*
+## install wakectl
+gcc wakectl.c -o wakectl
+sudo mv wakectl /usr/local/bin/
+sudo chown root:root /usr/local/bin/wakectl
+sudo chmod 4755 /usr/local/bin/wakectl 
