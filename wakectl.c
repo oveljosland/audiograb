@@ -64,13 +64,13 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 
-	if (s > 0) {
+	if (s >= 0) {
 		fp = fopen(f, "w");
 		if (!fp) {
 			perror("fopen");
 			return 1;
 		}
-		fprintf(fp, "%ld\n", s);
+		fprintf(fp, "+%ld\n", s);
 		fclose(fp);
 		return 0;
 	}
