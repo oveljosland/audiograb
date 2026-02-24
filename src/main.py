@@ -88,7 +88,13 @@ if __name__ == "__main__":
 	print(f"compressed upload directory: {cm}")
 	"""
 
-	print(bat.get_voltage())
+	vbat = bat.get_voltage()
+	rtc.set_wakealarm_minutes(5)
+	rtc.disable()
+	rtc.print_kernel_info()
+
+
+	# log: Battery voltage: bat.get_voltage()
 	
 
 	"""
