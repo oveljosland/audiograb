@@ -1,18 +1,37 @@
 # notes
 
-## access to udisks2
+## access to udisks2 and shutdown
 udisksctl needs password to mount/unmount - add polkit rule.
 
-put in ``/etc/polkit-1/rules.d/50-user-mount-umount.rules``,
+put in ``/etc/polkit-1/rules.d/mount.rules`` and replace `user`,
 
 ```
 polkit.addRule(function(action, subject) {
-	if ((action.id == "org.freedesktop.udisks2.filesystem-mount" ||
+	if ((
+		action.id == "org.freedesktop.udisks2.filesystem-mount" ||
 		action.id == "org.freedesktop.udisks2.filesystem-unmount" ||
-		action.id == "org.freedesktop.udisks2.eject-media") &&
-		subject.user == "user") {
-			return polkit.Result.YES;
-		}
+		action.id == "org.freedesktop.udisks2.eject-media"
+		) && subject.user == "user"
+	)
+	{
+		return polkit.Result.YES;
+	}
+});
+```
+
+put in ``/etc/polkit-1/rules.d/login.rules`` and replace `user`,
+```
+polkit.addRule(function(action, subject) {
+	if ((
+		action.id == "org.freedesktop.login1.reboot" ||
+		action.id == "org.freedesktop.login1.reboot-multiple-sessions" ||
+		action.id == "org.freedesktop.login1.power-off" ||
+		action.id == "org.freedesktop.login1.power-off-multiple-sessions"
+		) && subject.user == "user"
+	)
+	{
+		return polkit.Result.YES;
+	}
 });
 ```
 
