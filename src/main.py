@@ -78,7 +78,7 @@ if __name__ == "__main__":
 	device.offload(mount_points, upload_dir)
 	print(f"moved files from {mount_points} to {upload_dir}")
 
-	conv.compress(upload_dir, config)
+	transcode.transcode(upload_dir, config)
 
 	exit(1)
 	

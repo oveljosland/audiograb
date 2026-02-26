@@ -24,10 +24,10 @@ def get_mime_type(path):
 
 
 def is_compressible(path, mime, config):
-	if not config["compression"]["enabled"]:
+	if not config["transcoding"]["enabled"]:
 		return False
 	
-	if config["compression"].get("skip_already_compressed", True):
+	if config["transcoding"].get("skip_already_compressed", True):
 		if mime.startswith("image/") and mime in IGNORE_IMAGE_TYPES:
 			return False
 		if mime.startswith("audio/") and mime in IGNORE_AUDIO_TYPES:
@@ -133,14 +133,14 @@ def transcode(path, config,):
 		return path
 
 	if mime.startswith("audio/"):
-		return transcode_audio_opus(path, config["compression"]["audio"])
+		return transcode_audio_opus(path, config["transcoding"]["audio"])
 
 	if mime.startswith("image/"):
-		return transcode_image_jpeg(path, config["compression"]["image"])
+		return transcode_image_jpeg(path, config["transcoding"]["image"])
 
 	"""
 	if mime.startswith("video/"):
-		return transcode_video_mkv(path, config["compression"]["video"])
+		return transcode_video_mkv(path, config["transcoding"]["video"])
 	"""
 
 	return path
