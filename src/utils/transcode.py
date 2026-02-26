@@ -44,7 +44,20 @@ TODO:
 - consider more descriptive return values for these routines?
 """
 
-def compress_audio_opus(input_path, config):
+def remove_original(original, output_path):
+	"""
+	Used to remove the original file after succesful transcoding.
+	"""
+	if os.path.isfile(output_path) and output_path != original:
+		try:
+			os.remove(original)
+		except OSError:
+			pass
+	return output_path
+
+
+
+def transcode_audio_opus(input_path, config):
 	if not os.path.isfile(input_path):
 		raise FileNotFoundError(input_path)
 
@@ -71,10 +84,11 @@ def compress_audio_opus(input_path, config):
 	]
 
 	subprocess.run(cmd, check=True)
+	remove_original(input_path, output_path)
 	return output_path
 
 
-def compress_image_jpeg(input_path, config):
+def transcode_image_jpeg(input_path, config):
 	image = Image.open(input_path)
 	image.thumbnail((config["max_width"], config["max_height"]))
 
@@ -87,20 +101,22 @@ def compress_image_jpeg(input_path, config):
 		quality=config["jpeg_quality"],
 		optimize=True
 	)
-
+	remove_original(input_path, output_path)
 	return output_path
 
 
-def compress(path, config):
+def transcode(path, config,):
 	"""
-	Compress a file or directory if determined by `config'.
+	Transcode a file or directory if determined by `config'.
 	This routine can be called with either a single file path or a
 	directory. If given a directory it will walk the tree and try to
-	convert audio, video, and images to the formats specified in `config'.
+	transcode audio, video, and images to the formats specified in `config'.
 
 	For files, the return value is the path to the converted file,
-	or the original path if no conversion or compression was performed.
+	or the original path if no transcoding was performed.
 	
+	The original files are removed after transcoding them.
+
 	For directories, the return value is the original directory path.
 	"""
 
@@ -108,12 +124,7 @@ def compress(path, config):
 		for root, _, files in os.walk(path):
 			for file_name in files:
 				file_path = os.path.join(root, file_name)
-				"""
-				The returned path is ignored.
-				If compression is disabled, or if the file is already compressed,
-				it will be left in place.
-				"""
-				compress(file_path, config)
+				transcode(file_path, config)
 		return path
 
 	mime = get_mime_type(path)
@@ -122,14 +133,14 @@ def compress(path, config):
 		return path
 
 	if mime.startswith("audio/"):
-		return compress_audio_opus(path, config["compression"]["audio"])
+		return transcode_audio_opus(path, config["compression"]["audio"])
 
 	if mime.startswith("image/"):
-		return compress_image_jpeg(path, config["compression"]["image"])
+		return transcode_image_jpeg(path, config["compression"]["image"])
 
 	"""
 	if mime.startswith("video/"):
-		return compress_video_mkv(path, config["compression"]["video"])
+		return transcode_video_mkv(path, config["compression"]["video"])
 	"""
 
 	return path
