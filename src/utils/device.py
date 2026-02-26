@@ -113,17 +113,27 @@ def power_off(device_path):
 	).stdout
 
 
-# offload files from mount points to dest, categorising dirs
+
 def offload(mount_points, dest):
 	"""
-	TODO:
-	- return list of moved files
+	Move every file found under ``mount_points'' into the local
+	``dest'' directory.
+
+	The files are categorised by their path such that telemetry/logs end up in
+	``dest/log/telemetry'' and everything else in ``dest/data''.  A list of the
+	absolute destination paths is returned.
+
+	The implementation is intentionally simple; it does not attempt to preserve
+	timestamps or handle name conflicts.  Those behaviours can be added if the
+	requirements ever demand them.
 	"""
+
 	def categorise_path(path):
 		path = path.lower()
 		if 'log' in path or 'telemetry' in path:
 			return os.path.join('log', 'telemetry')
 		return 'data'
+
 	moved = []
 	for mnt in mount_points:
 		for root, _, files in os.walk(mnt):
@@ -138,26 +148,16 @@ def offload(mount_points, dest):
 				print(f"dst: {dst}")
 				os.makedirs(os.path.dirname(dst), exist_ok=True)
 				shutil.move(src, dst)
+				moved.append(dst)
+	return moved
 
 
-"""
-def power_off_device(device):
-
-Arranges for the drive to be safely removed and powered off.
-On the OS side this includes ensuring that no process is using the drive, then
-requesting that in-flight buffers and caches are committed to stable storage.
-The exact steps for powering off the drive depends on the drive itself and the interconnect used.
-For drives connected through USB, the effect is that the USB device will be deconfigured followed by
-disabling the upstream hub port it is connected to.
-
-Note that as some physical devices contain multiple drives (for example 4-in-1 flash card reader USB devices) powering off one drive may affect other drives.
-As such there are not a lot of guarantees associated with performing this action.
-Usually the effect is that the drive disappears as if it was unplugged.
-
-	output = subprocess.run([
-		"udisksctl", "power-off", device
-	],
-	capture_output=True,
-	text=True
-	)
-"""
+def cleanup(device_path, partitions):
+	"""
+	Unmount every partition on ``device_path'' and power off the block device.
+	"""
+	try:
+		unmount_all_partitions(partitions)
+		power_off(device_path)
+	except Exception as e:
+		print(f"error while unmounting/powering off: {e}")
