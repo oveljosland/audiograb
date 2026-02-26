@@ -2,7 +2,7 @@
 	"project_name": "devgrab",
 	"date_time_format": "%Y%m%d-%H%M%S",
 
-	"compression": {
+	"transcoding": {
 		"enabled": true,
 
 		"audio": {
