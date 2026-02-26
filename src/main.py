@@ -13,7 +13,7 @@ import src.utils.rtc as rtc
 import src.utils.bat as bat
 import src.utils.device as device
 import src.utils.transcode as transcode
-import src.utils.config as config
+from src.utils.config import load_config
 
 
 """
@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
 	# Load config with remote download and fallback to cache
 	try:
-		config = config.download_config("https://folk.ntnu.no/ovelj/config.json")
+		config = load_config()
 		print("config loaded")
 	except RuntimeError as e:
 		print(f"failed to load config: {e}")

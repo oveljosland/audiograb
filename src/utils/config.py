@@ -72,7 +72,7 @@ def load_cached():
 		print(f"failed load cached config: {e}")
 		return None
 
-def load_fallback(path):
+def load_fallback(path=BACKUP_CONFIG):
 	"""
 	load fallback config
 	"""
@@ -88,3 +88,40 @@ def load_fallback(path):
 	except Exception as e:
 		print(f"failed load fallback config: {e}")
 		return None
+
+def load_config(url=REMOTE_CONFIG, cache=True):
+	# priority
+	# 1. url
+	# 2. cache
+	# 3. fallback
+
+	print(f"trying to download config from {url}")
+	config = download_config(url)
+
+	if config is not None:
+		if cache:
+			cache_config(config)
+		print("using downloaded cofnig")
+		return config
+	
+	print(f"failed to download config")
+
+	config = load_cached()
+	if config is not None:
+		print("using cached config")
+		return config
+	
+	print(f"failed to load cached config")
+
+	config = load_fallback()
+	if config is not None:
+		print("using fallback config")
+		return config
+	
+	raise RuntimeError(
+		f"\nfailed to load config from any of the following sources:\n"
+		f"\tremote:   {url}\n"
+		f"\tcache:    {CACHED_CONFIG}\n"
+		f"\tfallback: {BACKUP_CONFIG}\n"
+	)
+
