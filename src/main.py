@@ -10,9 +10,9 @@ import subprocess
 import logging
 
 import src.utils.rtc as rtc
-import src.utils.bat as bat
-import src.utils.device as device
-import src.utils.transcode as transcode
+from src.utils.bat import get_battery_voltage
+from src.utils.device import offload
+from src.utils.transcode import transcode
 from src.utils.config import load_config
 
 
@@ -25,7 +25,7 @@ from src.utils.config import load_config
 def halt():
 	"""
 	Ask the OS to halt the system.
-	The `POWER_OFF_ON_HALT' EEPROM flag must be set to `1'.
+	The `POWER_OFF_ON_HALT` EEPROM flag must be set to `1`.
 	"""
 	try:
 		subprocess.run(["systemctl", "halt"], check=True)
@@ -46,6 +46,11 @@ def ntp_synced():
 
 
 def create_upload_directory(config):
+	"""
+	Create upload dir in `/tmp` with timestamp and uuid.
+	On Raspberry Pi OS, `/tmp` is a `tmpfs`, which means
+	it is stored in memory and will be erased on reboot.
+	"""
 	timestamp = time.strftime(config.get('date_time_format', "%Y%m%d-%H%M%S"))
 	uid = str(uuid.uuid4())[:8] # unique id
 	upload_dir = os.path.join(
@@ -56,65 +61,27 @@ def create_upload_directory(config):
 	return upload_dir
 
 
-def copy_testmedia(mount_point):
-    for i in os.listdir("testmedia"):
-        src = os.path.join("testmedia", i)
-        dst = os.path.join(mount_point, i)
-        if os.path.isdir(src):
-            shutil.copytree(src, dst, dirs_exist_ok=True)
-        else:
-            shutil.copy2(src, dst)
+
 
 
 if __name__ == "__main__": 
 
-	# Load config with remote download and fallback to cache
+
 	try:
 		config = load_config()
 		print("config loaded")
 	except RuntimeError as e:
 		print(f"failed to load config: {e}")
 		exit(1)
-	
-	exit(0) # test
 
-	start_time = time.strftime(config.get('date_time_format', "%Y%m%d-%H%M%S"))
+	print(f"battery voltage: {get_battery_voltage()}V")
+	print(f"ntp synced     : {ntp_synced()}")
 
-	print(f"battery voltage: {bat.get_voltage()}V")
-	print(f"ntp synced: {ntp_synced()}")
+	#upload_directory = create_upload_directory(config)
+	upload_directory = 'upload'
 
-	device_path = device.get_removable_devices()
-	print(f"removable devices: {device_path}")
-
-	if not device_path:
-		exit(1)
-	
-	partitions = device.get_partitions(device_path)
-	print(f"partitions: {partitions}")
-
-	mount_points = device.mount_all_partitions(device_path)
-	print(f"mount points: {mount_points}")
-
-	copy_testmedia(mount_points[0])
-
-	#upload_dir = create_upload_directory(config)
-	#print(f"upload directory: {upload_dir}")
-
-	# temporary local dir for testing
-	upload_dir = 'upload'
-
-	# device.offload returns the list of files that were moved,
-	# might useful for telemetry in the future
-	moved = device.offload(mount_points, upload_dir)
-	print(f"moved {len(moved)} files from {mount_points} to {upload_dir}")
-
-	transcode.transcode(upload_dir, config)
-
-	"""
-	stop before cleanup
-	"""
-	#exit(0)
-
+	offload(upload_directory)
+	transcode(upload_directory, config)
 
 	# schedule the next wakeup if the scheduler is enabled
 	scheduler = config.get('scheduler', {})
@@ -136,4 +103,3 @@ if __name__ == "__main__":
 	exit(0)
 
 
-# org.freedesktop.login1.halt
