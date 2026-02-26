@@ -114,7 +114,7 @@ def power_off(device_path):
 
 
 
-def offload(mount_points, dest):
+def move(mount_points, dest):
 	"""
 	Move every file found under ``mount_points'' into the local
 	``dest'' directory.
@@ -151,4 +151,32 @@ def offload(mount_points, dest):
 				moved.append(dst)
 	return moved
 
-	
+
+def copy_testmedia(mount_point):
+	for i in os.listdir("testmedia"):
+		src = os.path.join("testmedia", i)
+		dst = os.path.join(mount_point, i)
+		if os.path.isdir(src):
+			shutil.copytree(src, dst, dirs_exist_ok=True)
+		else:
+			shutil.copy2(src, dst)
+
+
+
+def offload(destination):
+	device_path = get_removable_devices()
+	print(f"removable devices: {device_path}")
+
+	if not device_path:
+		raise RuntimeError("no removable devices found")
+
+	partitions = get_partitions(device_path)
+	print(f"partitions: {partitions}")
+
+	mount_points = mount_all_partitions(device_path)
+	print(f"mount points: {mount_points}")
+
+	copy_testmedia(mount_points[0]) #- testing
+
+	moved = move(mount_points, destination)
+	return moved
