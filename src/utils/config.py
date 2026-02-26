@@ -38,3 +38,33 @@ def download_config(url, timeout=10):
 	except json.JSONDecodeError as e:
 		print(f"invalid json in remote config: {e}")
 		return None
+
+
+
+def cache_config(config):
+	try:
+		make_cache_dir()
+		with open(CACHED_CONFIG, "w") as cache:
+			json.dump(config, cache, indent=4)
+		print(f"cached config to {CACHED_CONFIG}")
+		return True
+	except Exception as e:
+		print(f"failed to cache config: {e}")
+		return False
+
+def load_cached():
+	"""
+	load cached config file
+	"""
+	if not CACHED_CONFIG.exists():
+		print(f"cached config not found: {CACHED_CONFIG}")
+		return None
+	
+	try:
+		with open(CACHED_CONFIG, "r") as cache:
+			config = json.load(cache)
+		print(f"loaded cached config: {CACHED_CONFIG}")
+		return config
+	except Exception as e:
+		print(f"failed load cached config: {e}")
+		return None
