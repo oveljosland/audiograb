@@ -28,19 +28,6 @@ def load_config(path):
 		return json.load(f)
 
 
-def upload_directory_to_bucket(upload_directory, bucket, config):
-	uploaded = []
-	for root, _, files in os.walk(upload_directory):
-		for local_file in files:
-			local_path = os.path.join(root, local_file)
-			remote_path = local_path[len(upload_directory)+1:]
-			blob = bucket.blob(remote_path)
-			compressed = conv.compress_if_needed(local_path, config)
-			blob.upload_from_filename(compressed)
-			uploaded.append(local_path)
-	return uploaded
-
-
 def create_upload_directory(config):
 	timestamp = time.strftime(config.get('date_time_format', "%Y%m%d-%H%M%S"))
 	uid = str(uuid.uuid4())[:8] # unique id
