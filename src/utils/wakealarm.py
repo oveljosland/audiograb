@@ -16,7 +16,7 @@ def alarm_irq_enabled():
 	return True if output == "yes" else False
 
 
-def set_wakealarm_minutes(minutes, path=SYSFS_WAKEALARM):
+def set_wakealarm(minutes, path=SYSFS_WAKEALARM):
 	if minutes < 0 or minutes is None:
 		"""
 		TODO: log something like "interval value error"
@@ -38,7 +38,7 @@ def set_wakealarm_minutes(minutes, path=SYSFS_WAKEALARM):
 		print(output.stdout)
 		print(output.stderr)
 
-def disable(path=SYSFS_WAKEALARM):
+def disable_wakealarm(path=SYSFS_WAKEALARM):
 	output = subprocess.run([
 		"wakectl", "-w", str(0), path
 		],

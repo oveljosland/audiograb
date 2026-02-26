@@ -9,7 +9,8 @@ import uuid
 import subprocess
 import logging
 
-import src.utils.rtc as rtc
+from src.utils.wakealarm import print_kernel_info
+from src.utils.wakealarm import set_wakealarm, disable_wakealarm
 from src.utils.bat import get_battery_voltage
 from src.utils.device import offload
 from src.utils.transcode import transcode
@@ -91,8 +92,9 @@ if __name__ == "__main__":
 			print(f"invalid wake interval ({interval})")
 		else:
 			print(f"setting alarm to {interval} minutes")
-			rtc.set_wakealarm_minutes(interval)
+			set_wakealarm(interval)
 
+	
 	# time to die
 	halt()
 
