@@ -1,6 +1,6 @@
 import subprocess
 
-def get_voltage():
+def get_battery_voltage():
 	"""
 	https://www.raspberrypi.com/documentation/computers/os.html#vcgencmd
 	"""
