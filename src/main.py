@@ -7,11 +7,13 @@ import json
 import shutil
 import uuid
 import subprocess
+import logging
 
 import src.utils.rtc as rtc
 import src.utils.bat as bat
 import src.utils.device as device
 import src.utils.transcode as transcode
+import src.utils.config as config
 
 
 """
@@ -52,9 +54,7 @@ def ntp_synced():
 	return output.stdout.strip() == "yes"
 
 
-def load_config(path):
-	with open(path, "r") as f:
-		return json.load(f)
+
 
 
 def create_upload_directory(config):
@@ -80,11 +80,15 @@ def copy_testmedia(mount_point):
 
 if __name__ == "__main__": 
 
-	"""
-	TODO:
-	- check if new config available from server
-	"""
-	config = load_config('src/config/example.json')
+	# Load config with remote download and fallback to cache
+	try:
+		config = config.download_config("https://folk.ntnu.no/ovelj/config.json")
+		print("config loaded")
+	except RuntimeError as e:
+		print(f"failed to load config: {e}")
+		exit(1)
+	
+	exit(0) # test
 
 	start_time = time.strftime(config.get('date_time_format', "%Y%m%d-%H%M%S"))
 
