@@ -42,6 +42,9 @@ def download_config(url, timeout=10):
 
 
 def cache_config(config):
+	"""
+	cache config file
+	"""
 	try:
 		make_cache_dir()
 		with open(CACHED_CONFIG, "w") as cache:
@@ -67,4 +70,21 @@ def load_cached():
 		return config
 	except Exception as e:
 		print(f"failed load cached config: {e}")
+		return None
+
+def load_fallback(path):
+	"""
+	load fallback config
+	"""
+	if not os.path.exists(path):
+		print(f"fallback config not found: {path}")
+		return None
+	
+	try:
+		with open(path, "r") as fallback:
+			config = json.load(fallback)
+		print(f"loaded fallback config: {path}")
+		return config
+	except Exception as e:
+		print(f"failed load fallback config: {e}")
 		return None
