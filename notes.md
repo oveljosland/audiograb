@@ -10,6 +10,8 @@ polkit.addRule(function(action, subject) {
 	if ((
 		action.id == "org.freedesktop.udisks2.filesystem-mount" ||
 		action.id == "org.freedesktop.udisks2.filesystem-unmount" ||
+		action.id == "org.freedesktop.udisks2.filesystem-mount-other-seat" ||
+		action.id == "org.freedesktop.udisks2.power-off-drive-other-seat" ||
 		action.id == "org.freedesktop.udisks2.eject-media"
 		) && subject.user == "user"
 	)
@@ -26,6 +28,7 @@ polkit.addRule(function(action, subject) {
 		action.id == "org.freedesktop.login1.reboot" ||
 		action.id == "org.freedesktop.login1.reboot-multiple-sessions" ||
 		action.id == "org.freedesktop.login1.power-off" ||
+		action.id == "org.freedesktop.login1.halt" ||
 		action.id == "org.freedesktop.login1.power-off-multiple-sessions"
 		) && subject.user == "user"
 	)
@@ -35,7 +38,9 @@ polkit.addRule(function(action, subject) {
 });
 ```
 
-sudo chmod 644 /etc/polkit-1/rules.d/50-user-mount-umount.rules
+sudo chmod 644 /etc/polkit-1/rules.d/mount.rules
+sudo chmod 644 /etc/polkit-1/rules.d/login.rules
+
 
 ## access to ``eeprom-config''
 Edit ``sudo visudo`` and add

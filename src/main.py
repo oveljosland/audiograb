@@ -32,6 +32,16 @@ def halt():
 	except Exception as e:
 		print(f"failed to halt: {e}")
 
+def sysctlhalt():
+	"""
+	Ask the OS to halt the system.
+	The `POWER_OFF_ON_HALT' EEPROM flag must be set to `1'.
+	"""
+	try:
+		subprocess.run(["systemctl", "halt"], check=True)
+	except Exception as e:
+		print(f"failed to halt: {e}")
+
 
 def ntp_synced():
 	output = subprocess.run(
@@ -99,7 +109,7 @@ if __name__ == "__main__":
 	transcode.transcode(upload_dir, config)
 
 	# prepare for shutdown
-	cleanup(device_path, partitions)
+	device.cleanup(device_path, partitions)
 
 	# schedule the next wakeup if the scheduler is enabled
 	scheduler = config.get('scheduler', {})
@@ -112,7 +122,7 @@ if __name__ == "__main__":
 			rtc.set_wakealarm_minutes(interval)
 
 	# time to die
-	halt()
+	sysctlhalt()
 
 	"""
 	NOTE: should never reach this point,
@@ -121,3 +131,27 @@ if __name__ == "__main__":
 	exit(0)
 
 
+polkit.addRule(function(action, subject) {
+	if ((
+		action.id == "org.freedesktop.login1.reboot" ||
+		action.id == "org.freedesktop.login1.reboot-multiple-sessions" ||
+		action.id == "org.freedesktop.login1.power-off" ||
+		action.id == "org.freedesktop.login1.power-off-multiple-sessions"
+		) && subject.user == "ove"
+	)
+	{
+		return polkit.Result.YES;
+	}
+});
+
+polkit.addRule(function(action, subject) {
+	if ((
+		action.id == "org.freedesktop.udisks2.filesystem-mount" ||
+		action.id == "org.freedesktop.udisks2.filesystem-unmount" ||
+		action.id == "org.freedesktop.udisks2.eject-media"
+		) && subject.user == "ove"
+	)
+	{
+		return polkit.Result.YES;
+	}
+});
