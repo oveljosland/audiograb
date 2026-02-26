@@ -91,7 +91,31 @@ def compress_image_jpeg(input_path, config):
 	return output_path
 
 
-def compress_if_needed(path, config):
+def compress(path, config):
+	"""
+	Compress a file or directory if determined by `config'.
+	This routine can be called with either a single file path or a
+	directory. If given a directory it will walk the tree and try to
+	convert audio, video, and images to the formats specified in `config'.
+
+	For files, the return value is the path to the converted file,
+	or the original path if no conversion or compression was performed.
+	
+	For directories, the return value is the original directory path.
+	"""
+
+	if os.path.isdir(path):
+		for root, _, files in os.walk(path):
+			for file_name in files:
+				file_path = os.path.join(root, file_name)
+				"""
+				The returned path is ignored.
+				If compression is disabled, or if the file is already compressed,
+				it will be left in place.
+				"""
+				compress(file_path, config)
+		return path
+
 	mime = get_mime_type(path)
 
 	if not is_compressible(path, mime, config):
@@ -99,10 +123,10 @@ def compress_if_needed(path, config):
 
 	if mime.startswith("audio/"):
 		return compress_audio_opus(path, config["compression"]["audio"])
-	
+
 	if mime.startswith("image/"):
 		return compress_image_jpeg(path, config["compression"]["image"])
-	
+
 	"""
 	if mime.startswith("video/"):
 		return compress_video_mkv(path, config["compression"]["video"])
