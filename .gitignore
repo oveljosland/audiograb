@@ -225,4 +225,4 @@ src/test/upload/
 # project specific
 testmedia/
 upload/
-address.txt
+temp.py
