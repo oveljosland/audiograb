@@ -101,7 +101,7 @@ def load_config(url=REMOTE_CONFIG, cache=True):
 	if config is not None:
 		if cache:
 			cache_config(config)
-		print("using downloaded cofnig")
+		print("using downloaded config")
 		return config
 	
 	print(f"failed to download config")
