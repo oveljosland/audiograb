@@ -24,17 +24,9 @@ What are the rules for removing /tmp?
 
 
 
-def halt():
-	"""
-	Ask the OS to halt the system.
-	The `POWER_OFF_ON_HALT' EEPROM flag must be set to `1'.
-	"""
-	try:
-		subprocess.run(["shutdown", "-h", "now"], check=True)
-	except Exception as e:
-		print(f"failed to halt: {e}")
 
-def sysctlhalt():
+
+def halt():
 	"""
 	Ask the OS to halt the system.
 	The `POWER_OFF_ON_HALT' EEPROM flag must be set to `1'.
@@ -127,8 +119,6 @@ if __name__ == "__main__":
 	"""
 	#exit(0)
 
-	# prepare for shutdown
-	device.cleanup(device_path, partitions)
 
 	# schedule the next wakeup if the scheduler is enabled
 	scheduler = config.get('scheduler', {})
@@ -141,7 +131,7 @@ if __name__ == "__main__":
 			rtc.set_wakealarm_minutes(interval)
 
 	# time to die
-	sysctlhalt()
+	halt()
 
 	"""
 	NOTE: should never reach this point,

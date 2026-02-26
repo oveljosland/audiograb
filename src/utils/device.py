@@ -151,13 +151,4 @@ def offload(mount_points, dest):
 				moved.append(dst)
 	return moved
 
-
-def cleanup(device_path, partitions):
-	"""
-	Unmount every partition on ``device_path'' and power off the block device.
-	"""
-	try:
-		unmount_all_partitions(partitions)
-		power_off(device_path)
-	except Exception as e:
-		print(f"error while unmounting/powering off: {e}")
+	
