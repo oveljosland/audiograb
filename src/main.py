@@ -68,6 +68,14 @@ def create_upload_directory(config):
 	return upload_dir
 
 
+def copy_testmedia(mount_point):
+    for i in os.listdir("testmedia"):
+        src = os.path.join("testmedia", i)
+        dst = os.path.join(mount_point, i)
+        if os.path.isdir(src):
+            shutil.copytree(src, dst, dirs_exist_ok=True)
+        else:
+            shutil.copy2(src, dst)
 
 
 if __name__ == "__main__": 
@@ -95,6 +103,8 @@ if __name__ == "__main__":
 	mount_points = device.mount_all_partitions(device_path)
 	print(f"mount points: {mount_points}")
 
+	copy_testmedia(mount_points[0])
+
 	#upload_dir = create_upload_directory(config)
 	#print(f"upload directory: {upload_dir}")
 
@@ -107,6 +117,11 @@ if __name__ == "__main__":
 	print(f"moved {len(moved)} files from {mount_points} to {upload_dir}")
 
 	transcode.transcode(upload_dir, config)
+
+	"""
+	stop before cleanup
+	"""
+	#exit(0)
 
 	# prepare for shutdown
 	device.cleanup(device_path, partitions)
@@ -131,27 +146,4 @@ if __name__ == "__main__":
 	exit(0)
 
 
-polkit.addRule(function(action, subject) {
-	if ((
-		action.id == "org.freedesktop.login1.reboot" ||
-		action.id == "org.freedesktop.login1.reboot-multiple-sessions" ||
-		action.id == "org.freedesktop.login1.power-off" ||
-		action.id == "org.freedesktop.login1.power-off-multiple-sessions"
-		) && subject.user == "ove"
-	)
-	{
-		return polkit.Result.YES;
-	}
-});
-
-polkit.addRule(function(action, subject) {
-	if ((
-		action.id == "org.freedesktop.udisks2.filesystem-mount" ||
-		action.id == "org.freedesktop.udisks2.filesystem-unmount" ||
-		action.id == "org.freedesktop.udisks2.eject-media"
-		) && subject.user == "ove"
-	)
-	{
-		return polkit.Result.YES;
-	}
-});
+# org.freedesktop.login1.halt
