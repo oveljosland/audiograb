@@ -3,8 +3,14 @@
 
 import os
 import json
-import requests
 from pathlib import Path # TDOD: maybe use this for the other modules too ...
+
+# in case requirements were not installed
+try:
+	import requests
+except ImportError:
+	requests = None
+
 
 CACHE_DIR = Path("/tmp/.audiograb_config")
 
