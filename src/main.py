@@ -16,11 +16,7 @@ import src.utils.transcode as transcode
 from src.utils.config import load_config
 
 
-"""
-TODO:
-What are the rules for removing /tmp?
-- is it done on boot? if not: remove upload dir after upload
-"""
+
 
 
 
