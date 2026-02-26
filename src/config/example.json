@@ -25,7 +25,7 @@
 	},
 
 	"scheduler": {
-		"enabled": true,
+		"enabled": false,
 		"interval_minutes": 5
 	}
 }
