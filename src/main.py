@@ -14,6 +14,25 @@ import src.utils.device as device
 import src.utils.transcode as transcode
 
 
+"""
+TODO:
+What are the rules for removing /tmp?
+- is it done on boot? if not: remove upload dir after upload
+"""
+
+
+
+def halt():
+	"""
+	Ask the OS to halt the system.
+	The `POWER_OFF_ON_HALT' EEPROM flag must be set to `1'.
+	"""
+	try:
+		subprocess.run(["shutdown", "-h", "now"], check=True)
+	except Exception as e:
+		print(f"failed to halt: {e}")
+
+
 def ntp_synced():
 	output = subprocess.run(
 		["timedatectl", "show", "-p", "NTPSynchronized", "--value"],
@@ -69,47 +88,36 @@ if __name__ == "__main__":
 	#upload_dir = create_upload_directory(config)
 	#print(f"upload directory: {upload_dir}")
 
-	"""
-	temporary local
-	"""
+	# temporary local dir for testing
 	upload_dir = 'upload'
 
-	# offload files from storage device
-	device.offload(mount_points, upload_dir)
-	print(f"moved files from {mount_points} to {upload_dir}")
+	# device.offload returns the list of files that were moved,
+	# might useful for telemetry in the future
+	moved = device.offload(mount_points, upload_dir)
+	print(f"moved {len(moved)} files from {mount_points} to {upload_dir}")
 
 	transcode.transcode(upload_dir, config)
 
-	exit(1)
-	
-	# unmount and power off device
-	try:
-		device.unmount_all_partitions(partitions)
-		print("unmounted partitions")
-		#device.power_off(device_path)
-		#print("powered off device")
+	# prepare for shutdown
+	cleanup(device_path, partitions)
 
-	except Exception as e:
-		print(f"error while unmounting/powering off: {e}")
+	# schedule the next wakeup if the scheduler is enabled
+	scheduler = config.get('scheduler', {})
+	if scheduler.get('enabled'):
+		interval = scheduler.get('interval_minutes')
+		if interval is None or interval < 0:
+			print(f"invalid wake interval ({interval})")
+		else:
+			print(f"setting alarm to {interval} minutes")
+			rtc.set_wakealarm_minutes(interval)
 
-	
-	#rtc.set_wakealarm_minutes(5)
-	#rtc.disable()
-	#rtc.print_kernel_info()
-
-
-	# log: Battery voltage: bat.get_voltage()
-	
+	# time to die
+	halt()
 
 	"""
-	TODO:
-	What are the rules for removing /tmp?
-	- is it done on boot? if not: remove upload dir after upload
+	NOTE: should never reach this point,
+	but in the unlikely event it does we exit explicitly.	
 	"""
-
-	
-
-
-
+	exit(0)
 
 
