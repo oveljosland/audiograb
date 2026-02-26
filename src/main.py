@@ -6,6 +6,7 @@ import time
 import json
 import shutil
 import uuid
+import subprocess
 
 import src.utils.rtc as rtc
 import src.utils.bat as bat
@@ -59,10 +60,12 @@ if __name__ == "__main__":
 	TODO:
 	- check if new config available from server
 	"""
-	
 	config = load_config('src/config/example.json')
-	"""
+
 	start_time = time.strftime(config.get('date_time_format', "%Y%m%d-%H%M%S"))
+
+	print(f"battery voltage: {bat.get_voltage()}V")
+	print(f"ntp synced: {ntp_synced()}")
 
 	device_path = device.get_removable_devices()
 	print(f"removable devices: {device_path}")
@@ -76,22 +79,36 @@ if __name__ == "__main__":
 	mount_points = device.mount_all_partitions(device_path)
 	print(f"mount points: {mount_points}")
 
-	upload_dir = create_upload_directory(config)
-	print(f"upload directory: {upload_dir}")
+	#upload_dir = create_upload_directory(config)
+	#print(f"upload directory: {upload_dir}")
+
+	"""
+	temporary local
+	"""
+	upload_dir = 'upload'
 
 	# offload files from storage device
 	device.offload(mount_points, upload_dir)
 	print(f"moved files from {mount_points} to {upload_dir}")
 
-	# compress the upload directory
-	cm = conv.compress_if_needed(upload_dir, config)
-	print(f"compressed upload directory: {cm}")
-	"""
+	conv.compress(upload_dir, config)
 
-	vbat = bat.get_voltage()
-	rtc.set_wakealarm_minutes(5)
-	rtc.disable()
-	rtc.print_kernel_info()
+	exit(1)
+	
+	# unmount and power off device
+	try:
+		device.unmount_all_partitions(partitions)
+		print("unmounted partitions")
+		#device.power_off(device_path)
+		#print("powered off device")
+
+	except Exception as e:
+		print(f"error while unmounting/powering off: {e}")
+
+	
+	#rtc.set_wakealarm_minutes(5)
+	#rtc.disable()
+	#rtc.print_kernel_info()
 
 
 	# log: Battery voltage: bat.get_voltage()
@@ -103,17 +120,8 @@ if __name__ == "__main__":
 	- is it done on boot? if not: remove upload dir after upload
 	"""
 
-	"""
-	# unmount and power off device
-	try:
-		device.unmount_all_partitions(partitions)
-		print("unmounted partitions")
-		device.power_off(device_path)
-		print("powered off device")
+	
 
-	except Exception as e:
-		print(f"error while unmounting/powering off: {e}")
-	"""
 
 
 
