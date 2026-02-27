@@ -57,7 +57,7 @@ def remove_original(original, output_path):
 
 
 
-def transcode_audio_opus(input_path, config):
+def transcode_audio_opus(input_path, config, debug=False):
 	if not os.path.isfile(input_path):
 		raise FileNotFoundError(input_path)
 
@@ -82,8 +82,16 @@ def transcode_audio_opus(input_path, config):
 		f'{config["bitrate_kbps"]}k',
 		output_path
 	]
-
-	subprocess.run(cmd, check=True)
+	if debug:
+		subprocess.run(cmd, check=True)
+	else:
+		# silence output if not debugging
+		subprocess.run(
+			cmd,
+			check=True,
+			stdout=subprocess.DEVNULL,
+			stderr=subprocess.DEVNULL
+		)
 	remove_original(input_path, output_path)
 	return output_path
 
@@ -105,7 +113,7 @@ def transcode_image_jpeg(input_path, config):
 	return output_path
 
 
-def transcode(path, config):
+def transcode(path, config, debug=False):
 	"""
 	Transcode a file or directory if determined by `config'.
 	This routine can be called with either a single file path or a
@@ -133,7 +141,11 @@ def transcode(path, config):
 		return path
 
 	if mime.startswith("audio/"):
-		return transcode_audio_opus(path, config["transcoding"]["audio"])
+		return transcode_audio_opus(
+			path,
+			config["transcoding"]["audio"],
+			debug=debug
+		)
 
 	if mime.startswith("image/"):
 		return transcode_image_jpeg(path, config["transcoding"]["image"])
