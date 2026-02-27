@@ -64,7 +64,6 @@ def create_upload_directory(config):
 
 
 
-
 if __name__ == "__main__": 
 
 
@@ -83,6 +82,24 @@ if __name__ == "__main__":
 
 	offload(upload_directory)
 	transcode(upload_directory, config)
+	
+	"""
+	upload
+	"""
+	storage = config.get('storage', {})
+	provider = storage.get('provider')
+	if provider == "gcs":
+		gcs_config = storage.get('gcs', {})
+		bucket_name = gcs_config.get('bucket_name')
+		if bucket_name is None:
+			print("bucket name missing from config")
+		else:
+			gcs = GCSProvider(bucket_name)
+			gcs.upload(upload_directory)
+	else:
+		print("no valid storage provider configured, skipping upload")
+
+	exit(0)
 
 	# schedule the next wakeup if the scheduler is enabled
 	scheduler = config.get('scheduler', {})
