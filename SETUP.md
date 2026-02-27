@@ -1,5 +1,10 @@
 # Setup
 
+## Install dependencies
+```
+pip install -r requirements.txt
+```
+
 ## Adding `polkit` rules
 Add the following lines to `/etc/polkit-1/rules.d/mount.rules`, and replace `user` with your username:
 ```
