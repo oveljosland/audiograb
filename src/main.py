@@ -15,6 +15,7 @@ from src.utils.bat import get_battery_voltage
 from src.utils.device import offload
 from src.utils.transcode import transcode
 from src.utils.config import load_config
+from src.utils.storage import GCSProvider
 
 
 
@@ -96,6 +97,10 @@ if __name__ == "__main__":
 		else:
 			gcs = GCSProvider(bucket_name)
 			gcs.upload(upload_directory)
+	
+	elif provider == "sigma2":
+		# TODO: implement uploading to NIRD Sigma2
+		pass
 	else:
 		print("no valid storage provider configured, skipping upload")
 

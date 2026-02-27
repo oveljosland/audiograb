@@ -53,3 +53,6 @@ class GCSProvider(StorageProvider):
 				print("uploaded {} to {}.".format(name, self.bucket.name))
 
 
+class Sigma2Provider(StorageProvider):
+	# TODO: implement class for Sigma2 provider
+	pass
