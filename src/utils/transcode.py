@@ -105,7 +105,7 @@ def transcode_image_jpeg(input_path, config):
 	return output_path
 
 
-def transcode(path, config,):
+def transcode(path, config):
 	"""
 	Transcode a file or directory if determined by `config'.
 	This routine can be called with either a single file path or a
