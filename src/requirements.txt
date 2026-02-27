@@ -1,3 +1,4 @@
 pillow
 requests
 google-cloud-storage
+silero-vad
