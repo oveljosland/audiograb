@@ -5,6 +5,12 @@
 pip install -r requirements.txt
 ```
 
+## Google Cloud Storage
+Set the environment variable with the path to your credentials:
+```
+export GOOGLE_APPLICATION_CREDENTIALS="key.json"
+```
+
 ## Adding `polkit` rules
 Add the following lines to `/etc/polkit-1/rules.d/mount.rules`, and replace `user` with your username:
 ```
