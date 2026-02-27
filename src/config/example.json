@@ -24,6 +24,13 @@
 		"skip_already_compressed": true
 	},
 
+	"storage": {
+		"provider": "gcs",
+		"gcs": {
+			"bucket_name": "devgrab"
+		}
+	},
+
 	"scheduler": {
 		"enabled": false,
 		"interval_minutes": 5
