@@ -26,14 +26,10 @@ def get_mime_type(path):
 def is_compressible(path, mime, config):
 	if not config["transcoding"]["enabled"]:
 		return False
-	
-	if config["transcoding"].get("skip_already_compressed", True):
-		if mime.startswith("image/") and mime in IGNORE_IMAGE_TYPES:
-			return False
-		if mime.startswith("audio/") and mime in IGNORE_AUDIO_TYPES:
-			return False
-		if mime.startswith("video/") and mime in IGNORE_VIDEO_TYPES:
-			return False
+	if mime.startswith(("image/", "audio/", "video/")):
+		continue
+	if mime in IGNORE_TYPES:
+		return False
 	return True
 
 # TODO: include other formats/codecs
