@@ -34,5 +34,11 @@
 	"scheduler": {
 		"enabled": false,
 		"interval_minutes": 5
+	},
+
+	"speech-detection": {
+		"enabled": true,
+		"model": "silero_vad",
+		"repo_or_dir": "snakers4/silero-vad"
 	}
 }
