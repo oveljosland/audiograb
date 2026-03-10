@@ -9,6 +9,7 @@ import uuid
 import subprocess
 import logging
 
+
 from src.utils.wakealarm import print_kernel_info
 from src.utils.wakealarm import set_wakealarm, disable_wakealarm
 from src.utils.bat import get_battery_voltage
@@ -16,6 +17,7 @@ from src.utils.device import offload
 from src.utils.transcode import transcode
 from src.utils.config import load_config
 from src.utils.storage import GCSProvider
+from src.utils.model import speech_timestamps
 
 
 
@@ -67,6 +69,7 @@ def create_upload_directory(config):
 
 if __name__ == "__main__": 
 
+	print("\n--- loading config file ------------------\n")
 
 	try:
 		config = load_config()
@@ -75,18 +78,30 @@ if __name__ == "__main__":
 		print(f"failed to load config: {e}")
 		exit(1)
 
-	print(f"battery voltage: {get_battery_voltage()}V")
-	print(f"ntp synced     : {ntp_synced()}")
+	#print(f"battery voltage: {get_battery_voltage()}V")
+	#print(f"ntp synced     : {ntp_synced()}")
 
-	#upload_directory = create_upload_directory(config)
-	upload_directory = 'upload'
+	print("\n--- finding removable devices ------------\n")
+
+	upload_directory = create_upload_directory(config)
 
 	offload(upload_directory)
+
+	print("\n--- speech detection ---------------------\n")
+	
+	# not implemented yet
+	#timestamps = speech_timestamps(upload_directory, config)
+	#print("timestamps:")
+	#print(timestamps)
+
+	print("\n--- transcoding --------------------------\n")
+
 	transcode(upload_directory, config)
 	
-	"""
-	upload
-	"""
+	print("\n--- uploading ----------------------------\n")
+
+	exit(0)
+
 	storage = config.get('storage', {})
 	provider = storage.get('provider')
 	if provider == "gcs":
@@ -104,8 +119,8 @@ if __name__ == "__main__":
 	else:
 		print("no valid storage provider configured, skipping upload")
 
-	exit(0)
 
+	print("\n--- scheduling next alarm ----------------\n")
 	# schedule the next wakeup if the scheduler is enabled
 	scheduler = config.get('scheduler', {})
 	if scheduler.get('enabled'):
