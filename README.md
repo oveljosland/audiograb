@@ -1,6 +1,9 @@
 # Audiograb
 The Audiograb is an embedded wireless wildlife monitoring system, currently in development by students at NTNU for the Norwegian Institute of Nature Research ([NINA](https://www.nina.no/english/Home)). This repository contains the source code for the Audiograb system. The PCB design files are available [here](https://github.com/oveljosland/audiograb-pcb).
 
+## Repo info
+The source code for the `audiograb` daemon (the Python program) is in `src/audiograbd`, and the rest of the source code is in `src/`.
+
 ## Before field deployment
 Edit bootloader configuration to enable the system to wake at configurable intervals:
 ```
