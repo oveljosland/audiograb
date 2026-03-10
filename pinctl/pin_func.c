@@ -1,7 +1,14 @@
 #include "pin_func.h"
-#include "utils.h"
 #include <unistd.h>
+#include <sys/time.h>
 #include <gpiod.h>
+
+
+long long timeInMilliseconds(void) {
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return (((long long)tv.tv_sec)*1000)+(tv.tv_usec/1000);
+}
 
 struct gpiod_line_request* init_sdio_line(const char* chip_path,
   unsigned int* offsets,
@@ -146,19 +153,25 @@ int request_SD_wait_for_quiet(struct gpiod_line_request* request,
   unsigned int* offset, int time_ms) {
   enum gpiod_line_value prev_values[4];
   enum gpiod_line_value current_values[4];
-  long long last_active;
+  long long last_active, start_count;
   int ret;
+  int timeout = 0; //returns timeout = 1 if 
 
   ret = gpiod_line_request_get_values(request, prev_values);
 
-  last_active = timeInMilliseconds();
+  start_count = timeInMilliseconds();
 
   //get new readings and compare with old. if different wait
   while (timeInMilliseconds() - last_active < time_ms) {
     int activity = 0;
     ret = gpiod_line_request_get_values(request, current_values); //read lines
-   
 
+    //timeout
+    if(timeInMilliseconds() - start_count < 10){
+      timeout = 1;
+      return timeout;
+    }
+    
     //check for activity
     for (int i = 0; i < 4; i++) {
       if (prev_values[i] != current_values[i]) {

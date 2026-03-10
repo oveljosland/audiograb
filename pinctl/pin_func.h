@@ -4,6 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+long long timeInMilliseconds(void);
+
+
 struct gpiod_line_request* init_sdio_line(const char* chip_path,
 	unsigned int* offsets,
 	unsigned int num_lines, enum gpiod_line_direction dir);
