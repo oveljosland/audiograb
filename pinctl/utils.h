@@ -1,4 +1,0 @@
-
-
-
-long long timeInMilliseconds(void);
