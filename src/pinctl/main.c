@@ -1,8 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
-// SPDX-FileCopyrightText: 2023 Kent Gibson <warthog618@gmail.com>
-
-/* Minimal example of reading a single line. */
-
+// to run program run "make all && sudo ./pinread"
 
 
 //for debug prints set debug 1, for no prints set debug 0
@@ -47,11 +43,12 @@ int main(void) {
 	SD_req = init_sdio_line(CHIP_PATH, SD_offsets, 4, GPIOD_LINE_DIRECTION_INPUT);
 
 	//wait for SD lines to be quiet. This is blocking code 
-	ret = request_SD_wait_for_quiet(SD_req, SD_offsets, 2000);
-	debug("No SD activity");
+	ret = request_SD_wait_for_quiet(SD_req, SD_offsets, 20000);
+	debug("No SD activity \n");
+	
 
 	//When there is no activity on SD lines, turn off power for SD card and disable switch
 
 
-	return 1;
+	return 0;
 }

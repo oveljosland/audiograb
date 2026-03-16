@@ -25,4 +25,4 @@ int request_send_pulse(struct gpiod_line_request* request,
 	unsigned int offset);
 
 int request_SD_wait_for_quiet(struct gpiod_line_request* request,
-	unsigned int* offset, int time_ms);
+	unsigned int* offset, long time_ms);

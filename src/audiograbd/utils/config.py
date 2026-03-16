@@ -16,7 +16,7 @@ CACHE_DIR = Path("/tmp/.audiograb_config")
 
 CACHED_CONFIG = CACHE_DIR / "config.json"
 REMOTE_CONFIG = "https://folk.ntnu.no/ovelj/config.json" # free real estate
-BACKUP_CONFIG = "src/config/example.json" # fallback
+BACKUP_CONFIG = "config/example.json" # fallback
 
 def make_cache_dir():
 	CACHE_DIR.mkdir(parents=True, exist_ok=True)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# python -m src.main
+# sudo python -m main
 
 import os
 import time
@@ -10,14 +10,15 @@ import subprocess
 import logging
 
 
-from src.utils.wakealarm import print_kernel_info
-from src.utils.wakealarm import set_wakealarm, disable_wakealarm
-from src.utils.bat import get_battery_voltage
-from src.utils.device import offload
-from src.utils.transcode import transcode
-from src.utils.config import load_config
-from src.utils.storage import GCSProvider
-from src.utils.model import speech_timestamps
+from utils.wakealarm import print_kernel_info
+from utils.wakealarm import set_wakealarm, disable_wakealarm
+from utils.bat import get_battery_voltage
+from utils.device import offload
+from utils.transcode import transcode
+from utils.config import load_config
+import utils.gpio as gp
+#from utils.storage import GCSProvider
+#from utils.model import speech_timestamps
 
 
 
@@ -66,7 +67,6 @@ def create_upload_directory(config):
 
 
 
-
 if __name__ == "__main__": 
 
 	print("\n--- loading config file ------------------\n")
@@ -80,7 +80,19 @@ if __name__ == "__main__":
 
 	#print(f"battery voltage: {get_battery_voltage()}V")
 	#print(f"ntp synced     : {ntp_synced()}")
-
+	
+	#Jonas:
+	#In python set swicth in correct position, enable switch, turn on external power
+	#wait for quiet sd bus or timeout from c prog.
+ 
+	print("\n--- Ensure gpio lines are set correct ------------\n")
+	
+	gp.init_sd_interface_pins()
+ 
+	print("\n--- listening to sd lines ------------\n")
+ 
+	gp.wait_for_quiet_SD_lines()
+ 
 	print("\n--- finding removable devices ------------\n")
 
 	upload_directory = create_upload_directory(config)

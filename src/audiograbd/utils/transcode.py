@@ -27,7 +27,8 @@ def is_compressible(path, mime, config):
 	if not config["transcoding"]["enabled"]:
 		return False
 	if mime.startswith(("image/", "audio/", "video/")):
-		continue
+		#JJ: changed continue with return true
+		return true
 	if mime in IGNORE_TYPES:
 		return False
 	return True
