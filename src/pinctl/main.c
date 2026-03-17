@@ -6,7 +6,7 @@
 
 
 //for debug prints set debug 1, for no prints set debug 0
-#define DEBUG 1
+#define DEBUG 0
 #define CHIP_PATH  "/dev/gpiochip0"
 #define DIR1_OFFSET 27
 #define DIR2_OFFSET 22
@@ -47,11 +47,11 @@ int main(void) {
 	SD_req = init_sdio_line(CHIP_PATH, SD_offsets, 4, GPIOD_LINE_DIRECTION_INPUT);
 
 	//wait for SD lines to be quiet. This is blocking code 
-	ret = request_SD_wait_for_quiet(SD_req, SD_offsets, 2000);
+	ret = request_SD_wait_for_quiet(SD_req, SD_offsets, 5000, 15000);
 	debug("No SD activity");
 
 	//When there is no activity on SD lines, turn off power for SD card and disable switch
 
 
-	return 1;
+	return ret;
 }

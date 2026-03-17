@@ -1,5 +1,7 @@
 #include "pin_func.h"
+#include "debug.h"
 #include <unistd.h>
+#include <stdio.h>
 #include <sys/time.h>
 #include <gpiod.h>
 
@@ -150,16 +152,16 @@ int request_send_pulse(struct gpiod_line_request* request,
 }
 
 int request_SD_wait_for_quiet(struct gpiod_line_request* request,
-  unsigned int* offset, int time_ms) {
+  unsigned int* offset, long time_ms, long timeout_ms) {
   enum gpiod_line_value prev_values[4];
   enum gpiod_line_value current_values[4];
   long long last_active, start_count;
   int ret;
-  int timeout = 0; //returns timeout = 1 if 
-
+  int timeout = 0; //returns timeout = 1 if timeout is reached and 0 is lines qre quiet.
   ret = gpiod_line_request_get_values(request, prev_values);
 
-  start_count = timeInMilliseconds();
+  start_count= timeInMilliseconds();
+  last_active = timeInMilliseconds();
 
   //get new readings and compare with old. if different wait
   while (timeInMilliseconds() - last_active < time_ms) {
@@ -167,7 +169,8 @@ int request_SD_wait_for_quiet(struct gpiod_line_request* request,
     ret = gpiod_line_request_get_values(request, current_values); //read lines
 
     //timeout
-    if(timeInMilliseconds() - start_count < 10){
+    if(timeInMilliseconds() - start_count > timeout_ms){
+      debug("timeout reached \n");
       timeout = 1;
       return timeout;
     }
@@ -176,10 +179,10 @@ int request_SD_wait_for_quiet(struct gpiod_line_request* request,
     for (int i = 0; i < 4; i++) {
       if (prev_values[i] != current_values[i]) {
         activity = 1;
-        printf("activity on %d \n", i);
+        debug("activity on %d \n", i);
       }
     }
-
+    
     //reset timer and update last readings
     if (activity == 1) {
       for (int i = 0; i < 4; i++) {
@@ -187,7 +190,8 @@ int request_SD_wait_for_quiet(struct gpiod_line_request* request,
         last_active = timeInMilliseconds();
       }
     }
-
+    
+    debug("lines quiet \n");
   }
-  return 1;
+  return 0;
 }
