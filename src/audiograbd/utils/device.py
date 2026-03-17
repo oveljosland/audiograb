@@ -176,7 +176,7 @@ def offload(destination):
 	mount_points = mount_all_partitions(device_path)
 	print(f"mount points: {mount_points}")
 
-	copy_testmedia(mount_points[0]) #- testing
+	#copy_testmedia(mount_points[0]) #- testing
 
 	moved = move(mount_points, destination)
 	return moved
