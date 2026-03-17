@@ -15,6 +15,10 @@ IGNORE_TYPES = {
 }
 
 def get_mime_type(path):
+	"""
+	Guess the MIME type of a file, returns
+	`application/octet-stream` if it fails
+	"""
 	mime, _ = mimetypes.guess_type(path)
 	return mime or "application/octet-stream"
 
@@ -35,25 +39,26 @@ def is_compressible(mime, config):
 # TODO: include other formats/codecs
 # this is jsut for testing
 
-"""
-TODO:
-- consider more descriptive return values for these routines?
-"""
+
 
 def remove_original(original, output_path):
 	"""
 	Used to remove the original file after succesful transcoding.
 	"""
 	if os.path.isfile(output_path) and output_path != original:
-		try:
-			os.remove(original)
-		except OSError:
-			pass
-	return output_path
+		os.remove(original)
 
 
+"""
+TODO:
+- Consider batch processing with FFmpeg for all the audiofiles, i.e. with one subprocess call, instead of one per file.
+"""
 
 def transcode_audio_opus(input_path, config, debug=False):
+	"""
+	Transcode audio with FFmpeg.
+	Get options from config, removes the original file afterwards.
+	"""
 	if not os.path.isfile(input_path):
 		raise FileNotFoundError(input_path)
 
@@ -88,7 +93,11 @@ def transcode_audio_opus(input_path, config, debug=False):
 			stdout=subprocess.DEVNULL,
 			stderr=subprocess.DEVNULL
 		)
-	remove_original(input_path, output_path)
+	
+	try:
+		remove_original(input_path, output_path)
+	except OSError as e:
+		print(f"failed to remove {input_path}: {e}")
 	return output_path
 
 
@@ -105,7 +114,11 @@ def transcode_image_jpeg(input_path, config):
 		quality=config["jpeg_quality"],
 		optimize=True
 	)
-	remove_original(input_path, output_path)
+
+	try:
+		remove_original(input_path, output_path)
+	except OSError as e:
+		print(f"failed to remove {input_path}: {e}")
 	return output_path
 
 
