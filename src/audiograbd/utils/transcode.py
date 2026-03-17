@@ -1,8 +1,13 @@
-from pathlib import Path
-import mimetypes
 import os
+import mimetypes
 import subprocess
-from PIL import Image
+from pathlib import Path
+
+
+TRANSCODERS = {
+    "audio": transcode_audio_opus,
+}
+
 
 """
 TODO:
@@ -118,26 +123,6 @@ def transcode_audio_opus(input_path, config, debug=False):
 	return output_path
 
 
-def transcode_image_jpeg(input_path, config):
-	image = Image.open(input_path)
-	image.thumbnail((config["max_width"], config["max_height"]))
-
-	base, _ = os.path.splitext(input_path)
-	output_path = base + ".jpg"
-
-	image.save(
-		output_path,
-		format="JPEG",
-		quality=config["jpeg_quality"],
-		optimize=True
-	)
-
-	try:
-		remove_original(input_path, output_path)
-	except OSError as e:
-		print(f"failed to remove {input_path}: {e}")
-	return output_path
-
 
 def transcode(path, config, debug=False):
 	"""
@@ -172,13 +157,5 @@ def transcode(path, config, debug=False):
 			config["transcoding"]["audio"],
 			debug=debug
 		)
-
-	if mime.startswith("image/"):
-		return transcode_image_jpeg(path, config["transcoding"]["image"])
-
-	"""
-	if mime.startswith("video/"):
-		return transcode_video_mkv(path, config["transcoding"]["video"])
-	"""
 
 	return path
