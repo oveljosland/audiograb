@@ -1,9 +1,29 @@
+from pathlib import Path
 import mimetypes
 import os
 import subprocess
 from PIL import Image
 
+"""
+TODO:
+- Consider doing the transcoding in parallell. Found an example online:
+	```
+	from concurrent.futures import ProcessPoolExecutor
+	from pathlib import Path
+	import subprocess
 
+	def transcode(path):
+		subprocess.run([
+			"ffmpeg", "-y", "-i", str(path),
+			"-c:a", "flac", str(path.with_suffix(".flac"))
+		], check=True)
+
+	files = list(Path("audio").glob("*.mp3"))
+
+	with ProcessPoolExecutor() as ex:
+		ex.map(convert, files)
+	```
+"""
 
 IGNORE_TYPES = {
 	"image/jpeg",
@@ -36,8 +56,7 @@ def is_compressible(mime, config):
 	return False
 
 
-# TODO: include other formats/codecs
-# this is jsut for testing
+
 
 
 
@@ -49,10 +68,8 @@ def remove_original(original, output_path):
 		os.remove(original)
 
 
-"""
-TODO:
-- Consider batch processing with FFmpeg for all the audiofiles, i.e. with one subprocess call, instead of one per file.
-"""
+
+
 
 def transcode_audio_opus(input_path, config, debug=False):
 	"""
