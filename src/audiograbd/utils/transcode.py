@@ -1,4 +1,3 @@
-import os
 import mimetypes
 import subprocess
 from pathlib import Path
@@ -63,8 +62,6 @@ def is_compressible(mime, config):
 
 
 
-
-
 def remove_original(original: Path, output_path: Path):
 	"""
 	Used to remove the original file after succesful transcoding.
@@ -73,50 +70,39 @@ def remove_original(original: Path, output_path: Path):
 		original.unlink(missing_ok=True)
 
 
-def transcode_audio_opus(input_path, config, debug=False):
+def transcode_opus(input_path, config, debug=False):
 	"""
 	Transcode audio with FFmpeg.
 	Get options from config, removes the original file afterwards.
 	"""
-	if not os.path.isfile(input_path):
+	if not input_path.is_file():
 		raise FileNotFoundError(input_path)
 
-	base, ext = os.path.splitext(input_path)
-	if ext.lower() == ".opus":
+	if input_path.suffix.lower() == ".opus":
 		return input_path
 
-	output_path = base + ".opus"
+	output_path = input_path.with_suffix(".opus")
 
 	cmd = [
 		"ffmpeg",
 		"-y",
 		"-i",
-		input_path,
-		"-ac",
-		"1",
-		"-ar",
-		str(config["sample_rate"]),
-		"-c:a",
-		"libopus",
-		"-b:a",
-		f'{config["bitrate_kbps"]}k',
-		output_path
+		str(input_path),
+		"-ac", "1", # mono
+		"-ar", str(config["sample_rate"]),
+		"-c:a", "libopus",
+		"-b:a", f'{config["bitrate_kbps"]}k',
+		str(output_path)
 	]
-	if debug:
-		subprocess.run(cmd, check=True)
-	else:
-		# silence output if not debugging
-		subprocess.run(
-			cmd,
-			check=True,
-			stdout=subprocess.DEVNULL,
-			stderr=subprocess.DEVNULL
-		)
+
+	subprocess.run(
+		cmd,
+		check=True,
+		stdout=None if debug else subprocess.DEVNULL,
+		stderr=None if debug else subprocess.DEVNULL
+	)
 	
-	try:
-		remove_original(input_path, output_path)
-	except OSError as e:
-		print(f"failed to remove {input_path}: {e}")
+	remove_original(input_path, output_path)
 	return output_path
 
 
