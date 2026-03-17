@@ -87,7 +87,23 @@ if __name__ == "__main__":
 
 	upload_directory = create_upload_directory(config)
 
-	offload(upload_directory)
+	try:
+		moved = offload(upload_directory)
+	except RuntimeError as e:
+		print(f"failed to offload to {upload_directory}: {e}")
+		"""
+		TODO:
+		
+		What should be done if there are no devices connected?
+
+		Suggestion:
+			set_wakealarm(5)
+			halt()
+		"""
+		
+
+
+	
 
 	print("\n--- speech detection ---------------------\n")
 	
