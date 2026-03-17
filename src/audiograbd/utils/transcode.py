@@ -44,37 +44,38 @@ def skip(codec, ext):
 
 
 
-def remove_original(original: Path, output_path: Path):
+def remove_original(original: Path, new: Path):
 	"""
-	Used to remove the original file after succesful transcoding.
+	Remove the original file after succesful transcoding.
 	"""
-	if output_path.exists() and output_path != original:
+	if new.exists() and new != original:
 		original.unlink(missing_ok=True)
 
 
-def transcode_opus(input_path, config, debug=False):
+def transcode_opus(path: Path, config, debug=False):
 	"""
 	Transcode audio with FFmpeg.
-	Get options from config, removes the original file afterwards.
+	Get options from config, remove original
+	file after transcoding.
 	"""
-	if not input_path.is_file():
-		raise FileNotFoundError(input_path)
+	if not path.is_file():
+		raise FileNotFoundError(path)
 
-	if input_path.suffix.lower() == ".opus":
-		return input_path
+	if path.suffix.lower() == ".opus":
+		return path
 
-	output_path = input_path.with_suffix(".opus")
+	output = path.with_suffix(".opus")
 
 	cmd = [
 		"ffmpeg",
 		"-y",
 		"-i",
-		str(input_path),
+		str(path),
 		"-ac", "1", # mono
 		"-ar", str(config["sample_rate"]),
 		"-c:a", "libopus",
 		"-b:a", f'{config["bitrate_kbps"]}k',
-		str(output_path)
+		str(output)
 	]
 
 	subprocess.run(
@@ -84,26 +85,31 @@ def transcode_opus(input_path, config, debug=False):
 		stderr=None if debug else subprocess.DEVNULL
 	)
 	
-	remove_original(input_path, output_path)
-	return output_path
+	remove_original(path, output)
+	return output
 
 
-def transcode_flac(input_path, config, debug=False):
-	if not input_path.is_file():
-		raise FileNotFoundError(input_path)
+def transcode_flac(path: Path, config: JSON, debug=False):
+	"""
+	Transcode audio with FFmpeg.
+	Get options from config, remove original
+	file after transcoding.
+	"""
+	if not path.is_file():
+		raise FileNotFoundError(path)
 
-	if input_path.suffix.lower() == ".flac":
-		return input_path
+	if path.suffix.lower() == ".flac":
+		return path
 
-	output_path = input_path.with_suffix(".flac")
+	output = path.with_suffix(".flac")
 
 	cmd = [
 		"ffmpeg",
 		"-y",
-		"-i", str(input_path),
+		"-i", str(path),
 		"-ac", "1", # mono
 		"-c:a", "flac",
-		str(output_path)
+		str(output)
 	]
 
 	subprocess.run(
@@ -113,11 +119,11 @@ def transcode_flac(input_path, config, debug=False):
 		stderr=None if debug else subprocess.DEVNULL
 	)
 
-	remove_original(input_path, output_path)
-	return output_path
+	remove_original(path, output)
+	return output
 
 
-def transcode(path, config, debug=False):
+def transcode(path: Path, config, debug=False):
 	path = Path(path)
 
 	if path.is_dir():
@@ -134,8 +140,7 @@ def transcode(path, config, debug=False):
 	if ext not in EXTENSIONS:
 		return path
 
-	audio_config = config["transcoding"]["audio"]
-	codec = audio_config["codec"]
+	codec = config["transcoding"]["audio"]["codec"]
 
 	if skip(codec, ext):
 		return path
@@ -144,4 +149,4 @@ def transcode(path, config, debug=False):
 	if not handler:
 		raise ValueError(f"unsupported codec: {codec}")
 
-	return handler(path, audio_config, debug=debug)
+	return handler(path, config["transcoding"]["audio"], debug=debug)
