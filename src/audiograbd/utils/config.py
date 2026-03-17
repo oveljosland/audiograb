@@ -12,7 +12,7 @@ except ImportError:
 	requests = None
 
 
-CACHE_DIR = Path("/tmp/.audiograb_config")
+CACHE_DIR = Path("~/.config/audiograb/")
 
 CACHED_CONFIG = CACHE_DIR / "config.json"
 REMOTE_CONFIG = "https://folk.ntnu.no/ovelj/config.json" # free real estate
@@ -90,10 +90,20 @@ def load_backup(path=BACKUP_CONFIG):
 		return None
 
 def load_config(url=REMOTE_CONFIG, cache=True):
-	# priority
-	# 1. url
-	# 2. cache
-	# 3. backup
+	"""
+	Loads a JSON configuration file from a URL.
+	Will fall back to a local cached configuration file
+	if it fails to load from the URL.
+
+	The remote configuration file is cached at:
+	`~/.config/audiograb/config.json`
+	
+	Priority
+	1. remote
+	2. cached
+	3. backup
+
+	"""
 
 	print(f"trying to download config from {url}")
 	config = download_config(url)
@@ -101,7 +111,7 @@ def load_config(url=REMOTE_CONFIG, cache=True):
 	if config is not None:
 		if cache:
 			cache_config(config)
-		print("using downloaded config")
+		print("using remote config")
 		return config
 	
 	print(f"failed to download config")
@@ -120,8 +130,8 @@ def load_config(url=REMOTE_CONFIG, cache=True):
 	
 	raise RuntimeError(
 		f"\nfailed to load config from any of the following sources:\n"
-		f"\tremote:   {url}\n"
-		f"\tcached:    {CACHED_CONFIG}\n"
+		f"\tremote: {url}\n"
+		f"\tcached: {CACHED_CONFIG}\n"
 		f"\tbackup: {BACKUP_CONFIG}\n"
 	)
 
