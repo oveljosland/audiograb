@@ -45,6 +45,12 @@ polkit.addRule(function(action, subject) {
 });
 ```
 
+## GPIO Access
+To use GPIO, `gpiozero` requires access to `/dev/mem`. Add yourself to the `kmem` group:
+```
+sudo usermod -aG kmem "user"
+``` 
+
 ## Install `wakectl`
 Compile:
 ```
