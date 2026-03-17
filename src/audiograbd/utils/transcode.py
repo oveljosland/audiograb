@@ -34,12 +34,13 @@ TODO:
 	```
 """
 
-def should_skip(codec, ext):
+def skip(codec, ext):
 	if codec == "opus" and ext == ".opus":
 		return True
 	if codec == "flac" and ext == ".flac":
 		return True
 	return False
+
 
 def get_mime_type(path):
 	"""
@@ -64,15 +65,12 @@ def is_compressible(mime, config):
 
 
 
-def remove_original(original, output_path):
+def remove_original(original: Path, output_path: Path):
 	"""
 	Used to remove the original file after succesful transcoding.
 	"""
-	if os.path.isfile(output_path) and output_path != original:
-		os.remove(original)
-
-
-
+	if output_path.exists() and output_path != original:
+		original.unlink(missing_ok=True)
 
 
 def transcode_audio_opus(input_path, config, debug=False):
