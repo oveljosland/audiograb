@@ -34,11 +34,12 @@ TODO:
 	```
 """
 
-IGNORE_TYPES = {
-	"audio/mpeg",
-	"audio/opus",
-	"audio/aac",
-}
+def should_skip(codec, ext):
+	if codec == "opus" and ext == ".opus":
+		return True
+	if codec == "flac" and ext == ".flac":
+		return True
+	return False
 
 def get_mime_type(path):
 	"""
