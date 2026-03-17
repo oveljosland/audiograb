@@ -78,7 +78,8 @@ if __name__ == "__main__":
 		print("config loaded")
 	except RuntimeError as e:
 		print(f"failed to load config: {e}")
-		exit(1)
+		#set_wakealarm(10)
+		#halt()
 
 	#print(f"battery voltage: {get_battery_voltage()}V")
 	#print(f"ntp synced     : {ntp_synced()}")
