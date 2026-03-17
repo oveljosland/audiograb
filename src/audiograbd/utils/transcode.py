@@ -25,7 +25,7 @@ def is_compressible(mime, config):
 
 	if (
 		mime.startswith(("image/", "audio/", "video/"))
-		and mime not in IGNORE_FORMATS
+		and mime not in IGNORE_TYPES
 	):
 		return True
 

@@ -19,7 +19,7 @@ from audiograbd.utils.device import offload
 from audiograbd.utils.transcode import transcode
 from audiograbd.utils.config import load_config
 from audiograbd.utils.storage import GCSProvider
-from audiograbd.utils.model import speech_timestamps
+#from audiograbd.utils.model import speech_timestamps
 
 
 
