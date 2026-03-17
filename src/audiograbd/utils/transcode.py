@@ -4,9 +4,13 @@ import subprocess
 from pathlib import Path
 
 
-TRANSCODERS = {
-    "audio": transcode_audio_opus,
+
+
+AUDIO_TRANSCODERS = {
+	"opus": transcode_opus,
+	"flac": transcode_flac
 }
+
 
 
 """
@@ -31,12 +35,9 @@ TODO:
 """
 
 IGNORE_TYPES = {
-	"image/jpeg",
-	"image/webp",
 	"audio/mpeg",
 	"audio/opus",
 	"audio/aac",
-	"video/mp4"
 }
 
 def get_mime_type(path):
@@ -52,10 +53,7 @@ def is_compressible(mime, config):
 	if not config["transcoding"]["enabled"]:
 		return False
 
-	if (
-		mime.startswith(("image/", "audio/", "video/"))
-		and mime not in IGNORE_TYPES
-	):
+	if mime.startswith("audio/"):
 		return True
 
 	return False
