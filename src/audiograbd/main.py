@@ -10,14 +10,14 @@ import subprocess
 import logging
 
 
-from src.utils.wakealarm import print_kernel_info
-from src.utils.wakealarm import set_wakealarm, disable_wakealarm
-from src.utils.bat import get_battery_voltage
-from src.utils.device import offload
-from src.utils.transcode import transcode
-from src.utils.config import load_config
-from src.utils.storage import GCSProvider
-from src.utils.model import speech_timestamps
+from audiograbd.utils.wakealarm import print_kernel_info
+from audiograbd.utils.wakealarm import set_wakealarm, disable_wakealarm
+from audiograbd.utils.bat import get_battery_voltage
+from audiograbd.utils.device import offload
+from audiograbd.utils.transcode import transcode
+from audiograbd.utils.config import load_config
+from audiograbd.utils.storage import GCSProvider
+from audiograbd.utils.model import speech_timestamps
 
 
 
