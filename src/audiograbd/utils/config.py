@@ -12,7 +12,7 @@ except ImportError:
 	requests = None
 
 
-CACHE_DIR = Path("~/.config/audiograb/")
+CACHE_DIR = Path("~/.config/audiograb/").expanduser()
 
 CACHED_CONFIG = CACHE_DIR / "config.json"
 REMOTE_CONFIG = "https://folk.ntnu.no/ovelj/config.json" # free real estate
