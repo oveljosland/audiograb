@@ -3,18 +3,14 @@ import os
 import subprocess
 from PIL import Image
 
-IGNORE_IMAGE_TYPES = {
-	"image/jpeg",
-	"image/webp"
-}
 
-IGNORE_AUDIO_TYPES = {
+
+IGNORE_TYPES = {
+	"image/jpeg",
+	"image/webp",
 	"audio/mpeg",
 	"audio/opus",
-	"audio/aac"
-}
-
-IGNORE_VIDEO_TYPES = {
+	"audio/aac",
 	"video/mp4"
 }
 
@@ -23,14 +19,18 @@ def get_mime_type(path):
 	return mime or "application/octet-stream"
 
 
-def is_compressible(path, mime, config):
+def is_compressible(mime, config):
 	if not config["transcoding"]["enabled"]:
 		return False
-	if mime.startswith(("image/", "audio/", "video/")):
-		continue
-	if mime in IGNORE_TYPES:
-		return False
-	return True
+
+	if (
+		mime.startswith(("image/", "audio/", "video/"))
+		and mime not in IGNORE_FORMATS
+	):
+		return True
+
+	return False
+
 
 # TODO: include other formats/codecs
 # this is jsut for testing
@@ -133,7 +133,7 @@ def transcode(path, config, debug=False):
 
 	mime = get_mime_type(path)
 
-	if not is_compressible(path, mime, config):
+	if not is_compressible(mime, config):
 		return path
 
 	if mime.startswith("audio/"):
