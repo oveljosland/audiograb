@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-# python -m src.main
+
+# run from /src
+# python -m audiograbd.main
 
 import os
 import time
