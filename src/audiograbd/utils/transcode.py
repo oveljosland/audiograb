@@ -26,10 +26,7 @@ TODO:
 
 EXTENSIONS = {".mp3", ".wav", ".flac", ".aac", ".ogg", ".m4a", ".opus"}
 
-TRANSCODERS = {
-	"opus": transcode_opus,
-	"flac": transcode_flac,
-}
+
 
 def skip(codec, ext):
 	if codec == "opus" and ext == ".opus":
@@ -89,7 +86,7 @@ def transcode_opus(path: Path, config, debug=False):
 	return output
 
 
-def transcode_flac(path: Path, config: JSON, debug=False):
+def transcode_flac(path: Path, config, debug=False):
 	"""
 	Transcode audio with FFmpeg.
 	Get options from config, remove original
@@ -121,6 +118,12 @@ def transcode_flac(path: Path, config: JSON, debug=False):
 
 	remove_original(path, output)
 	return output
+
+
+TRANSCODERS = {
+	"opus": transcode_opus,
+	"flac": transcode_flac,
+}
 
 
 def transcode(path: Path, config, debug=False):
