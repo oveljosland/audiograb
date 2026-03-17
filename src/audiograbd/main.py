@@ -91,7 +91,9 @@ if __name__ == "__main__":
 
 	print("\n--- speech detection ---------------------\n")
 	
-	# not implemented yet
+	"""
+	TODO:
+	"""
 	#timestamps = speech_timestamps(upload_directory, config)
 	#print("timestamps:")
 	#print(timestamps)
