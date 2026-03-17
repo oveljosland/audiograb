@@ -106,6 +106,34 @@ def transcode_opus(input_path, config, debug=False):
 	return output_path
 
 
+def transcode_flac(input_path, config, debug=False):
+	if not input_path.is_file():
+		raise FileNotFoundError(input_path)
+
+	if input_path.suffix.lower() == ".flac":
+		return input_path
+
+	output_path = input_path.with_suffix(".flac")
+
+	cmd = [
+		"ffmpeg",
+		"-y",
+		"-i", str(input_path),
+		"-ac", "1", # mono
+		"-c:a", "flac",
+		str(output_path)
+	]
+
+	subprocess.run(
+		cmd,
+		check=True,
+		stdout=None if debug else subprocess.DEVNULL,
+		stderr=None if debug else subprocess.DEVNULL
+	)
+
+	remove_original(input_path, output_path)
+	return output_path
+
 
 def transcode(path, config, debug=False):
 	"""
