@@ -1,15 +1,5 @@
-import mimetypes
 import subprocess
 from pathlib import Path
-
-
-
-
-AUDIO_TRANSCODERS = {
-	"opus": transcode_opus,
-	"flac": transcode_flac
-}
-
 
 
 """
@@ -33,6 +23,14 @@ TODO:
 	```
 """
 
+
+EXTENSIONS = {".mp3", ".wav", ".flac", ".aac", ".ogg", ".m4a", ".opus"}
+
+TRANSCODERS = {
+	"opus": transcode_opus,
+	"flac": transcode_flac,
+}
+
 def skip(codec, ext):
 	if codec == "opus" and ext == ".opus":
 		return True
@@ -41,23 +39,7 @@ def skip(codec, ext):
 	return False
 
 
-def get_mime_type(path):
-	"""
-	Guess the MIME type of a file, returns
-	`application/octet-stream` if it fails
-	"""
-	mime, _ = mimetypes.guess_type(path)
-	return mime or "application/octet-stream"
 
-
-def is_compressible(mime, config):
-	if not config["transcoding"]["enabled"]:
-		return False
-
-	if mime.startswith("audio/"):
-		return True
-
-	return False
 
 
 
@@ -136,37 +118,30 @@ def transcode_flac(input_path, config, debug=False):
 
 
 def transcode(path, config, debug=False):
-	"""
-	Transcode a file or directory if determined by `config'.
-	This routine can be called with either a single file path or a
-	directory. If given a directory it will walk the tree and try to
-	transcode audio, video, and images to the formats specified in `config'.
+	path = Path(path)
 
-	For files, the return value is the path to the converted file,
-	or the original path if no transcoding was performed.
-	
-	The original files are removed after transcoding them.
-
-	For directories, the return value is the original directory path.
-	"""
-
-	if os.path.isdir(path):
-		for root, _, files in os.walk(path):
-			for file_name in files:
-				file_path = os.path.join(root, file_name)
-				transcode(file_path, config)
+	if path.is_dir():
+		for file_path in path.rglob("*"):
+			if file_path.is_file():
+				transcode(file_path, config, debug=debug)
 		return path
 
-	mime = get_mime_type(path)
-
-	if not is_compressible(mime, config):
+	if not config["transcoding"]["enabled"]:
 		return path
 
-	if mime.startswith("audio/"):
-		return transcode_audio_opus(
-			path,
-			config["transcoding"]["audio"],
-			debug=debug
-		)
+	ext = path.suffix.lower()
 
-	return path
+	if ext not in EXTENSIONS:
+		return path
+
+	audio_config = config["transcoding"]["audio"]
+	codec = audio_config["codec"]
+
+	if skip(codec, ext):
+		return path
+
+	handler = TRANSCODERS.get(codec)
+	if not handler:
+		raise ValueError(f"unsupported codec: {codec}")
+
+	return handler(path, audio_config, debug=debug)
