@@ -1,154 +1,155 @@
-import mimetypes
-import os
 import subprocess
-from PIL import Image
+from pathlib import Path
 
-
-
-IGNORE_TYPES = {
-	"image/jpeg",
-	"image/webp",
-	"audio/mpeg",
-	"audio/opus",
-	"audio/aac",
-	"video/mp4"
-}
-
-def get_mime_type(path):
-	mime, _ = mimetypes.guess_type(path)
-	return mime or "application/octet-stream"
-
-
-def is_compressible(mime, config):
-	if not config["transcoding"]["enabled"]:
-		return False
-
-	if (
-		mime.startswith(("image/", "audio/", "video/"))
-		and mime not in IGNORE_TYPES
-	):
-		return True
-
-	return False
-
-
-# TODO: include other formats/codecs
-# this is jsut for testing
 
 """
 TODO:
-- consider more descriptive return values for these routines?
+- Consider doing the transcoding in parallell. Found an example online:
+	```
+	from concurrent.futures import ProcessPoolExecutor
+	from pathlib import Path
+	import subprocess
+
+	def transcode(path):
+		subprocess.run([
+			"ffmpeg", "-y", "-i", str(path),
+			"-c:a", "flac", str(path.with_suffix(".flac"))
+		], check=True)
+
+	files = list(Path("audio").glob("*.mp3"))
+
+	with ProcessPoolExecutor() as ex:
+		ex.map(convert, files)
+	```
 """
 
-def remove_original(original, output_path):
+
+EXTENSIONS = {".mp3", ".wav", ".flac", ".aac", ".ogg", ".m4a", ".opus"}
+
+
+
+def skip(codec, ext):
+	if codec == "opus" and ext == ".opus":
+		return True
+	if codec == "flac" and ext == ".flac":
+		return True
+	return False
+
+
+
+
+
+
+
+def remove_original(original: Path, new: Path):
 	"""
-	Used to remove the original file after succesful transcoding.
+	Remove the original file after succesful transcoding.
 	"""
-	if os.path.isfile(output_path) and output_path != original:
-		try:
-			os.remove(original)
-		except OSError:
-			pass
-	return output_path
+	if new.exists() and new != original:
+		original.unlink(missing_ok=True)
 
 
+def transcode_opus(path: Path, config, debug=False):
+	"""
+	Transcode audio with FFmpeg.
+	Get options from config, remove original
+	file after transcoding.
+	"""
+	if not path.is_file():
+		raise FileNotFoundError(path)
 
-def transcode_audio_opus(input_path, config, debug=False):
-	if not os.path.isfile(input_path):
-		raise FileNotFoundError(input_path)
+	if path.suffix.lower() == ".opus":
+		return path
 
-	base, ext = os.path.splitext(input_path)
-	if ext.lower() == ".opus":
-		return input_path
-
-	output_path = base + ".opus"
+	output = path.with_suffix(".opus")
 
 	cmd = [
 		"ffmpeg",
 		"-y",
 		"-i",
-		input_path,
-		"-ac",
-		"1",
-		"-ar",
-		str(config["sample_rate"]),
-		"-c:a",
-		"libopus",
-		"-b:a",
-		f'{config["bitrate_kbps"]}k',
-		output_path
+		str(path),
+		"-ac", "1", # mono
+		"-ar", str(config["sample_rate"]),
+		"-c:a", "libopus",
+		"-b:a", f'{config["bitrate_kbps"]}k',
+		str(output)
 	]
-	if debug:
-		subprocess.run(cmd, check=True)
-	else:
-		# silence output if not debugging
-		subprocess.run(
-			cmd,
-			check=True,
-			stdout=subprocess.DEVNULL,
-			stderr=subprocess.DEVNULL
-		)
-	remove_original(input_path, output_path)
-	return output_path
 
-
-def transcode_image_jpeg(input_path, config):
-	image = Image.open(input_path)
-	image.thumbnail((config["max_width"], config["max_height"]))
-
-	base, _ = os.path.splitext(input_path)
-	output_path = base + ".jpg"
-
-	image.save(
-		output_path,
-		format="JPEG",
-		quality=config["jpeg_quality"],
-		optimize=True
+	subprocess.run(
+		cmd,
+		check=True,
+		stdout=None if debug else subprocess.DEVNULL,
+		stderr=None if debug else subprocess.DEVNULL
 	)
-	remove_original(input_path, output_path)
-	return output_path
-
-
-def transcode(path, config, debug=False):
-	"""
-	Transcode a file or directory if determined by `config'.
-	This routine can be called with either a single file path or a
-	directory. If given a directory it will walk the tree and try to
-	transcode audio, video, and images to the formats specified in `config'.
-
-	For files, the return value is the path to the converted file,
-	or the original path if no transcoding was performed.
 	
-	The original files are removed after transcoding them.
+	remove_original(path, output)
+	return output
 
-	For directories, the return value is the original directory path.
+
+def transcode_flac(path: Path, config, debug=False):
 	"""
+	Transcode audio with FFmpeg.
+	Get options from config, remove original
+	file after transcoding.
+	"""
+	if not path.is_file():
+		raise FileNotFoundError(path)
 
-	if os.path.isdir(path):
-		for root, _, files in os.walk(path):
-			for file_name in files:
-				file_path = os.path.join(root, file_name)
-				transcode(file_path, config)
+	if path.suffix.lower() == ".flac":
 		return path
 
-	mime = get_mime_type(path)
+	output = path.with_suffix(".flac")
 
-	if not is_compressible(mime, config):
+	cmd = [
+		"ffmpeg",
+		"-y",
+		"-i", str(path),
+		"-ac", "1", # mono
+		"-c:a", "flac",
+		str(output)
+	]
+
+	subprocess.run(
+		cmd,
+		check=True,
+		stdout=None if debug else subprocess.DEVNULL,
+		stderr=None if debug else subprocess.DEVNULL
+	)
+
+	remove_original(path, output)
+	return output
+
+
+TRANSCODERS = {
+	"opus": transcode_opus,
+	"flac": transcode_flac,
+}
+
+
+def transcode(path: Path, config, debug=False):
+	path = Path(path)
+
+	if path.is_dir():
+		for file_path in path.rglob("*"):
+			if file_path.is_file():
+				transcode(file_path, config, debug=debug)
 		return path
 
-	if mime.startswith("audio/"):
-		return transcode_audio_opus(
-			path,
-			config["transcoding"]["audio"],
-			debug=debug
-		)
+	if not config["transcoding"]["enabled"]:
+		return path
 
-	if mime.startswith("image/"):
-		return transcode_image_jpeg(path, config["transcoding"]["image"])
+	ext = path.suffix.lower()
 
-	"""
-	if mime.startswith("video/"):
-		return transcode_video_mkv(path, config["transcoding"]["video"])
-	"""
+	if ext not in EXTENSIONS:
+		return path
 
-	return path
+	codec = config["transcoding"]["audio"]["codec"]
+
+	if skip(codec, ext):
+		return path
+
+	handler = TRANSCODERS.get(codec)
+	if not handler:
+		raise ValueError(f"unsupported codec: {codec}")
+
+	return handler(path, config["transcoding"]["audio"], debug=debug)

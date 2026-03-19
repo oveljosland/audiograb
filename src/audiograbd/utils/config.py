@@ -12,11 +12,11 @@ except ImportError:
 	requests = None
 
 
-CACHE_DIR = Path("/tmp/.audiograb_config")
+CACHE_DIR = Path("~/.config/audiograb/").expanduser()
 
 CACHED_CONFIG = CACHE_DIR / "config.json"
 REMOTE_CONFIG = "https://folk.ntnu.no/ovelj/config.json" # free real estate
-BACKUP_CONFIG = "src/config/example.json" # fallback
+BACKUP_CONFIG = "src/config/example.json" # backup
 
 def make_cache_dir():
 	CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -72,28 +72,38 @@ def load_cached():
 		print(f"failed load cached config: {e}")
 		return None
 
-def load_fallback(path=BACKUP_CONFIG):
+def load_backup(path=BACKUP_CONFIG):
 	"""
-	load fallback config
+	load backup config
 	"""
 	if not os.path.exists(path):
-		print(f"fallback config not found: {path}")
+		print(f"backup config not found: {path}")
 		return None
 	
 	try:
-		with open(path, "r") as fallback:
-			config = json.load(fallback)
-		print(f"loaded fallback config: {path}")
+		with open(path, "r") as backup:
+			config = json.load(backup)
+		print(f"loaded backup config: {path}")
 		return config
 	except Exception as e:
-		print(f"failed load fallback config: {e}")
+		print(f"failed load backup config: {e}")
 		return None
 
 def load_config(url=REMOTE_CONFIG, cache=True):
-	# priority
-	# 1. url
-	# 2. cache
-	# 3. fallback
+	"""
+	Loads a JSON configuration file from a URL.
+	Will fall back to a local cached configuration file
+	if it fails to load from the URL.
+
+	The remote configuration file is cached at:
+	`~/.config/audiograb/config.json`
+	
+	Priority
+	1. remote
+	2. cached
+	3. backup
+
+	"""
 
 	print(f"trying to download config from {url}")
 	config = download_config(url)
@@ -101,7 +111,7 @@ def load_config(url=REMOTE_CONFIG, cache=True):
 	if config is not None:
 		if cache:
 			cache_config(config)
-		print("using downloaded config")
+		print("using remote config")
 		return config
 	
 	print(f"failed to download config")
@@ -113,15 +123,15 @@ def load_config(url=REMOTE_CONFIG, cache=True):
 	
 	print(f"failed to load cached config")
 
-	config = load_fallback()
+	config = load_backup()
 	if config is not None:
-		print("using fallback config")
+		print("using backup config")
 		return config
 	
 	raise RuntimeError(
 		f"\nfailed to load config from any of the following sources:\n"
-		f"\tremote:   {url}\n"
-		f"\tcache:    {CACHED_CONFIG}\n"
-		f"\tfallback: {BACKUP_CONFIG}\n"
+		f"\tremote: {url}\n"
+		f"\tcached: {CACHED_CONFIG}\n"
+		f"\tbackup: {BACKUP_CONFIG}\n"
 	)
 
