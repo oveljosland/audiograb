@@ -138,6 +138,9 @@ if __name__ == "__main__":
 	
 	print("\n--- uploading ----------------------------\n")
 
+    
+
+	exit(0)
 
 	storage = config.get('storage', {})
 	provider = storage.get('provider')
@@ -152,14 +155,11 @@ if __name__ == "__main__":
 	
 	elif provider == "sigma2":
 		# TODO: implement uploading to NIRD Sigma2
-			sigma2 = sigma2Provider()
-			sigma2.upload(upload_directory)
-			print("simga2")
+		pass
 	else:
 		print("no valid storage provider configured, skipping upload")
 
 
-	exit(0)
 	print("\n--- scheduling next alarm ----------------\n")
 	# schedule the next wakeup if the scheduler is enabled
 	scheduler = config.get('scheduler', {})

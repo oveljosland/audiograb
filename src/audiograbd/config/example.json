@@ -25,7 +25,7 @@
 	},
 
 	"storage": {
-		"provider": "gcs",
+		"provider": "sigma2",
 		"gcs": {
 			"bucket_name": "devgrab"
 		}

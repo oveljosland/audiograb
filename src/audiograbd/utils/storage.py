@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from google.cloud.storage import Client, transfer_manager
 
+
 # https://www.geeksforgeeks.org/python/abstract-classes-in-python/
 # https://docs.cloud.google.com/storage/docs/samples?language=python
 
@@ -55,4 +56,21 @@ class GCSProvider(StorageProvider):
 
 class Sigma2Provider(StorageProvider):
 	# TODO: implement class for Sigma2 provider
+	#path for credentials
+	cred_path = "/home/jonas/folder/NIRD_credentials/ove_creds.txt"
+	credentials = [] #first username then password
+	credentials = open(cred_path, "r").read().split(",")
+
+	print(credentials)
+
+	def upload(source_directory):
+
+		subprocess.run(["rsync", "--info=progress2", "-a", "home/jonas/folder/test_file.txt",
+		 credentials[0] + "@login.nird.sigma2.no:folder"])
+		#ssh ovelj
+
+
+		
+
+
 	pass
