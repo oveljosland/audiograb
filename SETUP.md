@@ -68,3 +68,6 @@ Set permissions:
 ```
 sudo chmod 4755 /usr/local/bin/wakectl
 ```
+
+## SSH KEY
+For nird server accses a ssh key needs to be generated and copied to the server

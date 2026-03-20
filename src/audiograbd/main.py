@@ -19,6 +19,7 @@ from audiograbd.utils.device import offload
 from audiograbd.utils.transcode import transcode
 from audiograbd.utils.config import load_config
 from audiograbd.utils.storage import GCSProvider
+from audiograbd.utils.gpio import SD_interface, wait_for_quiet_SD_lines, init_sd_interface_pins, change_sd_host_to_cm, change_sd_host_to_ext
 #from audiograbd.utils.model import speech_timestamps
 
 
@@ -84,27 +85,46 @@ if __name__ == "__main__":
 	#print(f"battery voltage: {get_battery_voltage()}V")
 	#print(f"ntp synced     : {ntp_synced()}")
 
+	#Jonas:
+	#In python set swicth in correct position, enable switch, turn on external power
+	#wait for quiet sd bus or timeout from c prog.
+ 
+	print("\n--- Ensure gpio lines are set correct ------------\n")
+	
+	try:
+		init_sd_interface_pins()
+	except:
+		print("Bad pin Factory")
+
+
+	print("\n--- listening to sd lines and change sd host\n")
+ 
+	try:
+		wait_for_quiet_SD_lines()
+	except:
+		print("likely bad pinmanufacture")
+
+
+
 	print("\n--- finding removable devices ------------\n")
 
 	upload_directory = create_upload_directory(config)
 
 	try:
-		moved = offload(upload_directory)
-	except RuntimeError as e:
-		print(f"failed to offload to {upload_directory}: {e}")
-		"""
-		TODO:
-		
-		What should be done if there are no devices connected?
+		offload(upload_directory)
+	except:
+		print("no upload directory found")
+	
 
-		Suggestion:
-			set_wakealarm(5)
-			halt()
-		"""
-		
-
+	print("\n--- Unmount in system and change sd host")
 
 	
+	#do unmount of sd card	
+	try:
+		change_sd_host_to_cm()
+	except:
+		print("Likely bad pin factory ")
+
 
 	print("\n--- speech detection ---------------------\n")
 	
@@ -121,11 +141,11 @@ if __name__ == "__main__":
 	
 	print("\n--- uploading ----------------------------\n")
 
-	exit(0)
 
 	storage = config.get('storage', {})
 	provider = storage.get('provider')
 	if provider == "gcs":
+		
 		gcs_config = storage.get('gcs', {})
 		bucket_name = gcs_config.get('bucket_name')
 		if bucket_name is None:
@@ -135,12 +155,15 @@ if __name__ == "__main__":
 			gcs.upload(upload_directory)
 	
 	elif provider == "sigma2":
-		# TODO: implement uploading to NIRD Sigma2
-		pass
+		username = storage.get('sigma2', {}).get('username')
+		port = storage.get('sigma2', {}).get('port')
+		sigma2 = Sigma2Provider()
+		sigma2.upload("/home/jonas/folder/test_file.txt", str(username), port)
 	else:
 		print("no valid storage provider configured, skipping upload")
 
 
+	exit(0)
 	print("\n--- scheduling next alarm ----------------\n")
 	# schedule the next wakeup if the scheduler is enabled
 	scheduler = config.get('scheduler', {})

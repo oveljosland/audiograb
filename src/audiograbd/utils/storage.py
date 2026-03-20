@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 from google.cloud.storage import Client, transfer_manager
+import subprocess
+
 
 # https://www.geeksforgeeks.org/python/abstract-classes-in-python/
 # https://docs.cloud.google.com/storage/docs/samples?language=python
@@ -54,5 +56,13 @@ class GCSProvider(StorageProvider):
 
 
 class Sigma2Provider(StorageProvider):
-	# TODO: implement class for Sigma2 provider
-	pass
+	
+	def __init__(self, cred_path="/home/jonas/folder/NIRD_credentials/ove_creds.txt"):
+		self.cred_path = cred_path #given that file is formated username,password
+		self.credentials = open(cred_path, "r").read().split(",") 
+
+	def upload(self, source_directory, username, port=12 ):
+		output = subprocess.run(["scp", "-P", str(port), source_directory,
+		username + "@login.nird.sigma2.no:folder/"], check=True, capture_output=True) #use -P12 port 12 to avoid firewall at nird (or something)
+		if output.returncode != 0:
+			print("Failed to upload to NIRD. SSH ERROR:", output.returncode)
