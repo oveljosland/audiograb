@@ -26,6 +26,10 @@
 
 	"storage": {
 		"provider": "sigma2",
+		"sigma2": {
+			"port": "12",
+			"username": "ove"
+		},
 		"gcs": {
 			"bucket_name": "devgrab"
 		}

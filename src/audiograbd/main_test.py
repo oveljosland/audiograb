@@ -17,8 +17,8 @@ from audiograbd.utils.wakealarm import set_wakealarm, disable_wakealarm
 from audiograbd.utils.bat import get_battery_voltage
 from audiograbd.utils.device import offload
 from audiograbd.utils.transcode import transcode
-from audiograbd.utils.config import load_config
-from audiograbd.utils.storage import GCSProvider
+from audiograbd.utils.config import load_config, load_backup
+from audiograbd.utils.storage import GCSProvider, Sigma2Provider
 from audiograbd.utils.gpio import SD_interface, wait_for_quiet_SD_lines, init_sd_interface_pins, change_sd_host_to_cm, change_sd_host_to_ext
 #from audiograbd.utils.model import speech_timestamps
 
@@ -75,11 +75,13 @@ if __name__ == "__main__":
 	print("\n--- loading config file ------------------\n")
 
 	try:
-		config = load_config()
+		config = load_backup()
+		
 		print("config loaded")
 	except RuntimeError as e:
 		print(f"failed to load config: {e}")
-		exit(1)
+		#set_wakealarm(10)
+		#halt()
 
 	#print(f"battery voltage: {get_battery_voltage()}V")
 	#print(f"ntp synced     : {ntp_synced()}")
@@ -127,7 +129,9 @@ if __name__ == "__main__":
 
 	print("\n--- speech detection ---------------------\n")
 	
-	# not implemented yet
+	"""
+	TODO:
+	"""
 	#timestamps = speech_timestamps(upload_directory, config)
 	#print("timestamps:")
 	#print(timestamps)
@@ -138,13 +142,12 @@ if __name__ == "__main__":
 	
 	print("\n--- uploading ----------------------------\n")
 
-    
-
-	exit(0)
 
 	storage = config.get('storage', {})
 	provider = storage.get('provider')
+	provider = "sigma2"
 	if provider == "gcs":
+		
 		gcs_config = storage.get('gcs', {})
 		bucket_name = gcs_config.get('bucket_name')
 		if bucket_name is None:
@@ -154,12 +157,16 @@ if __name__ == "__main__":
 			gcs.upload(upload_directory)
 	
 	elif provider == "sigma2":
-		# TODO: implement uploading to NIRD Sigma2
-		pass
+
+			username = storage.get('sigma2', {}).get('username')
+			port = storage.get('sigma2', {}).get('port')
+			sigma2 = Sigma2Provider()
+			sigma2.upload("/home/jonas/folder/test_file.txt", str(username), port)
 	else:
 		print("no valid storage provider configured, skipping upload")
 
 
+	exit(0)
 	print("\n--- scheduling next alarm ----------------\n")
 	# schedule the next wakeup if the scheduler is enabled
 	scheduler = config.get('scheduler', {})

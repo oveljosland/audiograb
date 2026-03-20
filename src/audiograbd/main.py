@@ -145,6 +145,7 @@ if __name__ == "__main__":
 	storage = config.get('storage', {})
 	provider = storage.get('provider')
 	if provider == "gcs":
+		
 		gcs_config = storage.get('gcs', {})
 		bucket_name = gcs_config.get('bucket_name')
 		if bucket_name is None:
@@ -154,10 +155,10 @@ if __name__ == "__main__":
 			gcs.upload(upload_directory)
 	
 	elif provider == "sigma2":
-		# TODO: implement uploading to NIRD Sigma2
-			sigma2 = sigma2Provider()
-			sigma2.upload(upload_directory)
-			print("simga2")
+		username = storage.get('sigma2', {}).get('username')
+		port = storage.get('sigma2', {}).get('port')
+		sigma2 = Sigma2Provider()
+		sigma2.upload("/home/jonas/folder/test_file.txt", str(username), port)
 	else:
 		print("no valid storage provider configured, skipping upload")
 
