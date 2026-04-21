@@ -1,7 +1,8 @@
 requests
 google-cloud-storage
-torch
-torchaudio==2.8
-onnxruntime
-silero-vad
+#torch
+#torchaudio==2.8
+#onnxruntime
+#silero-vad
 gpiozero
+birdnet
