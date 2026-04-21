@@ -18,16 +18,16 @@ class GCSProvider(StorageProvider):
 		self.client = Client()
 		self.bucket = self.client.bucket(bucket_name)
 
-	def upload(self, source_directory, workers=8):
-		# get all files in `source_directory` as Path objects
-		directory_as_path_obj = Path(source_directory)
+	def upload(self, src, workers=8):
+		# get all files in `src` as Path objects
+		directory_as_path_obj = Path(src)
 		paths = directory_as_path_obj.rglob("*")
 
 		# filter so the list only includes files, not directories
 		file_paths = [path for path in paths if path.is_file()]
 
-		# make paths relative to `source_directory`
-		relative_paths = [path.relative_to(source_directory) for path in file_paths]
+		# make paths relative to `src`
+		relative_paths = [path.relative_to(src) for path in file_paths]
 
 		# convert them to strings
 		string_paths = [str(path) for path in relative_paths]
@@ -37,12 +37,12 @@ class GCSProvider(StorageProvider):
 		results = transfer_manager.upload_many_from_filenames(
 			self.bucket,
 			string_paths,
-			source_directory=source_directory,
+			src=src,
 			max_workers=workers,
 		)
 
 		"""
-		results list is either `None` or an exception
+		Results list is either `None` or an exception
 		for each filename in the input list, in order.
 		"""
 		for name, result in zip(string_paths, results):

@@ -1,6 +1,7 @@
 import socket
 
 def check_internet_connectivity(timeout=3):
+	""" Check internet connectivity. """
 	try:
 		socket.setdefaulttimeout(timeout)
 		socket.create_connection(("1.1.1.1", 53))
@@ -9,6 +10,7 @@ def check_internet_connectivity(timeout=3):
 		return False
 
 def wait_for_internet_connection(tries, timeout=2):
+	""" Wait for internet connection. """
 	connected = False
 	for t in range(tries):
 		connected = check_internet_connectivity(timeout)

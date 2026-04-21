@@ -7,7 +7,8 @@ KERNEL_INFO_RTC = '/proc/driver/rtc'
 
 
 
-def alarm_irq_enabled():
+def alarm_irq_enabled() -> bool:
+	"""Returns True if the RTC IRQ alarm is set."""
 	output = subprocess.run([
 		"grep", "alarm_IRQ", KERNEL_INFO_RTC
 		],
@@ -18,7 +19,9 @@ def alarm_irq_enabled():
 	return True if output == "yes" else False
 
 
-def set_wakealarm(minutes, path=SYSFS_WAKEALARM):
+
+def set_wakealarm(minutes: int, path=SYSFS_WAKEALARM) -> None:
+	"""Sets the wake alarm in minutes."""
 	if minutes < 0 or minutes is None:
 		"""
 		TODO: log something like "interval value error"
@@ -33,6 +36,7 @@ def set_wakealarm(minutes, path=SYSFS_WAKEALARM):
 		text=True
 	)
 
+	# check if the alarm has been set
 	if not alarm_irq_enabled():
 		"""
 		TODO: log failed to set wakealarm
@@ -40,7 +44,10 @@ def set_wakealarm(minutes, path=SYSFS_WAKEALARM):
 		print(output.stdout)
 		print(output.stderr)
 
+
+
 def disable_wakealarm(path=SYSFS_WAKEALARM):
+	"""Disable the wake alarm."""
 	output = subprocess.run([
 		"wakectl", "-w", str(0), path
 		],
@@ -58,6 +65,7 @@ def disable_wakealarm(path=SYSFS_WAKEALARM):
 
 
 def print_kernel_info(path=KERNEL_INFO_RTC):
+	"""Print RTC kernel info."""
 	output = subprocess.run([
 		"cat", path
 		],
@@ -65,7 +73,5 @@ def print_kernel_info(path=KERNEL_INFO_RTC):
 		text=True
 	)
 	print(output.stdout)
-
-
 
 

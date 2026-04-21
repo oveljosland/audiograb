@@ -18,13 +18,13 @@ BACKUP_CONFIG = "src/config/example.json" # backup
 
 
 def make_cache_dir():
-	""" Make the cache directory. """
+	"""Make the cache directory."""
 	CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 
 def download_config(url, timeout=10):
-	""" Download configuration file from URL. """
+	"""Download config file from URL."""
 	if requests is None:
 		print("Missing `requests`")
 		return None
@@ -45,7 +45,7 @@ def download_config(url, timeout=10):
 
 
 def cache_config(config):
-	""" Cache the configuration file at `CACHE_DIR`. """
+	"""Cache the config file in `CACHE_DIR`."""
 	try:
 		make_cache_dir()
 		with open(CACHED_CONFIG, "w") as cache:
@@ -59,7 +59,7 @@ def cache_config(config):
 
 
 def load_cached():
-	""" Load the cached configuration file. """
+	"""Load the cached configuration file."""
 	if not CACHED_CONFIG.exists():
 		print(f"cached config not found: {CACHED_CONFIG}")
 		return None
@@ -76,7 +76,7 @@ def load_cached():
 
 
 def load_backup(path=BACKUP_CONFIG):
-	""" Load the backup configuration file included in this repository. """
+	"""Load the backup configuration file included in this repository."""
 	if not os.path.exists(path):
 		print(f"backup config not found: {path}")
 		return None
@@ -93,14 +93,12 @@ def load_backup(path=BACKUP_CONFIG):
 
 
 def load_config(url=REMOTE_CONFIG, cache=True):
-	"""
-	Load the configuration file.
+	"""Load the config file.
 	
 	Priority
 	1. Remote
 	2. Cached
 	3. Backup
-
 	"""
 
 	print(f"trying to download config from {url}")

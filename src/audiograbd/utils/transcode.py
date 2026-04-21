@@ -28,32 +28,27 @@ EXTENSIONS = {".mp3", ".wav", ".flac", ".aac", ".ogg", ".m4a", ".opus"}
 
 
 
-def skip(codec, ext):
-	if codec == "opus" and ext == ".opus":
-		return True
-	if codec == "flac" and ext == ".flac":
-		return True
-	return False
-
-
-
-
+def skip(codec: str, ext: str) -> bool:
+	"""Returns True if the file should skip transcoding."""
+	skip = {
+		"opus": ".opus",
+		"flac": ".flac",
+	}
+	return skip.get(codec) == ext
 
 
 
 def remove_original(original: Path, new: Path):
-	"""
-	Remove the original file after succesful transcoding.
-	"""
+	"""Remove the original file after succesful transcoding."""
 	if new.exists() and new != original:
 		original.unlink(missing_ok=True)
 
 
+
 def transcode_opus(path: Path, config, debug=False):
-	"""
-	Transcode audio with FFmpeg.
-	Get options from config, remove original
-	file after transcoding.
+	"""Transcode audio into Opus with FFmpeg.
+	Gets parameters from the config file,
+	and removes original file after transcoding.
 	"""
 	if not path.is_file():
 		raise FileNotFoundError(path)
@@ -86,11 +81,11 @@ def transcode_opus(path: Path, config, debug=False):
 	return output
 
 
+
 def transcode_flac(path: Path, config, debug=False):
-	"""
-	Transcode audio with FFmpeg.
-	Get options from config, remove original
-	file after transcoding.
+	"""Transcode audio into FLAC with FFmpeg.
+	Gets parameters from the config file,
+	and removes original file after transcoding.
 	"""
 	if not path.is_file():
 		raise FileNotFoundError(path)
@@ -126,7 +121,10 @@ TRANSCODERS = {
 }
 
 
-def transcode(path: Path, config, debug=False):
+def transcode(path: Path, config, debug=False) -> Path:
+	"""Transcode media into the codec specified in the config file.
+	Codecs not listed in `EXTENSIONS` will be ignored.
+	"""
 	path = Path(path)
 
 	if path.is_dir():
@@ -153,3 +151,5 @@ def transcode(path: Path, config, debug=False):
 		raise ValueError(f"unsupported codec: {codec}")
 
 	return handler(path, config["transcoding"]["audio"], debug=debug)
+
+
