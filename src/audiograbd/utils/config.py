@@ -1,29 +1,32 @@
-# config loader. downloads config from a remote server, caches it,
-# and falls back to cache or local file if download failss
-
 import os
 import json
-from pathlib import Path # TDOD: maybe use this for the other modules too ...
+from pathlib import Path # TODO: maybe use this for the other modules too ...
 
-# in case requirements were not installed
 try:
 	import requests
 except ImportError:
 	requests = None
 
 
+
 CACHE_DIR = Path("~/.config/audiograb/").expanduser()
 
 CACHED_CONFIG = CACHE_DIR / "config.json"
-REMOTE_CONFIG = "https://folk.ntnu.no/ovelj/config.json" # free real estate
+REMOTE_CONFIG = "https://folk.ntnu.no/ovelj/config.json"
 BACKUP_CONFIG = "src/config/example.json" # backup
 
+
+
 def make_cache_dir():
+	""" Make the cache directory. """
 	CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
+
+
 def download_config(url, timeout=10):
+	""" Download configuration file from URL. """
 	if requests is None:
-		print("requests is NONE")
+		print("Missing `requests`")
 		return None
 	
 	try:
@@ -36,15 +39,13 @@ def download_config(url, timeout=10):
 		print(f"failed to download config from {url}: {e}")
 		return None
 	except json.JSONDecodeError as e:
-		print(f"invalid json in remote config: {e}")
+		print(f"Invalid JSON in config: {e}")
 		return None
 
 
 
 def cache_config(config):
-	"""
-	cache config file
-	"""
+	""" Cache the configuration file at `CACHE_DIR`. """
 	try:
 		make_cache_dir()
 		with open(CACHED_CONFIG, "w") as cache:
@@ -55,10 +56,10 @@ def cache_config(config):
 		print(f"failed to cache config: {e}")
 		return False
 
+
+
 def load_cached():
-	"""
-	load cached config file
-	"""
+	""" Load the cached configuration file. """
 	if not CACHED_CONFIG.exists():
 		print(f"cached config not found: {CACHED_CONFIG}")
 		return None
@@ -72,10 +73,10 @@ def load_cached():
 		print(f"failed load cached config: {e}")
 		return None
 
+
+
 def load_backup(path=BACKUP_CONFIG):
-	"""
-	load backup config
-	"""
+	""" Load the backup configuration file included in this repository. """
 	if not os.path.exists(path):
 		print(f"backup config not found: {path}")
 		return None
@@ -89,19 +90,16 @@ def load_backup(path=BACKUP_CONFIG):
 		print(f"failed load backup config: {e}")
 		return None
 
+
+
 def load_config(url=REMOTE_CONFIG, cache=True):
 	"""
-	Loads a JSON configuration file from a URL.
-	Will fall back to a local cached configuration file
-	if it fails to load from the URL.
-
-	The remote configuration file is cached at:
-	`~/.config/audiograb/config.json`
+	Load the configuration file.
 	
 	Priority
-	1. remote
-	2. cached
-	3. backup
+	1. Remote
+	2. Cached
+	3. Backup
 
 	"""
 
@@ -134,4 +132,5 @@ def load_config(url=REMOTE_CONFIG, cache=True):
 		f"\tcached: {CACHED_CONFIG}\n"
 		f"\tbackup: {BACKUP_CONFIG}\n"
 	)
+
 
