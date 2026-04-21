@@ -7,6 +7,7 @@ import subprocess
 
 
 def get_block_devices_json():
+	""" Returns a list of block devices as JSON. """
 	output = subprocess.run([
 		"lsblk", "-J", "-b", # print size in bytes
 		"-o", "NAME,TYPE,SIZE,RM,FSTYPE,MOUNTPOINTS" # only relevant fields
@@ -19,6 +20,7 @@ def get_block_devices_json():
 
 
 def get_removable_devices():
+	""" Returns the path of all removable block devices. """
 	devices = get_block_devices_json()
 	removable = []
 
@@ -39,6 +41,10 @@ def get_removable_devices():
 
 
 def get_partitions(device_path, return_largest=False):
+	"""
+	Returns the partitions of the device.
+	Optionally return the largest partition.
+	"""
 	devices = get_block_devices_json()
 	for device in devices['blockdevices']:
 		if f"/dev/{device['name']}" == device_path:
@@ -52,6 +58,7 @@ def get_partitions(device_path, return_largest=False):
 
 
 def mount(device_path):
+	""" Mount the device, and return its mountpoint. """
 	output = subprocess.run([
 		"udisksctl", "mount", "-b", device_path
 	],
@@ -70,11 +77,12 @@ def mount(device_path):
 		# failed to find mount point
 		raise RuntimeError(f"failed to mount {device_path}: {output.stderr}")
 	
-	return output.stdout.split()[-1] # return mountpoint from stdout
+	return output.stdout.split()[-1]
 
 
 
 def unmount(device_path):
+	""" Unmount the device. """
 	return subprocess.run([
 		"udisksctl", "unmount", "-b", device_path
 	],
@@ -85,6 +93,7 @@ def unmount(device_path):
 
 
 def mount_all_partitions(device_path):
+	""" Mount all the partitions of the device, return their mountpoints. """
 	partitions = get_partitions(device_path)
 	mount_points = []
 	for partition in partitions:
@@ -95,12 +104,14 @@ def mount_all_partitions(device_path):
 
 
 def unmount_all_partitions(device_paths):
+	""" Unmount all partitions of the device. """
 	for device_path in device_paths:
 		unmount(device_path)
 
 
 
 def power_off(device_path):
+	""" Power off the device. """
 	# normalise, /dev/sda2 -> /dev/sda
 	device_path = re.sub(r"\d+$", "", device_path)
 
@@ -114,18 +125,14 @@ def power_off(device_path):
 
 
 
-def move(mount_points, dest):
+def move(mnt, dst):
 	"""
-	Move every file found under ``mount_points'' into the local
-	``dest'' directory.
+	Move all files from `mnt` to `dst`.
 
-	The files are categorised by their path such that telemetry/logs end up in
-	``dest/log/telemetry'' and everything else in ``dest/data''.  A list of the
-	absolute destination paths is returned.
-
-	The implementation is intentionally simple; it does not attempt to preserve
-	timestamps or handle name conflicts.  Those behaviours can be added if the
-	requirements ever demand them.
+	The files are categorised by their path such that telemetry and logs end up in
+	`dst/log/telemetry` and everything else in `dst/data`.
+	
+	Returns a list of the absolute destination paths.
 	"""
 
 	def categorise_path(path):
@@ -135,16 +142,16 @@ def move(mount_points, dest):
 		return 'data'
 
 	moved = []
-	for mnt in mount_points:
-		for root, _, files in os.walk(mnt):
+	for m in mnt:
+		for root, _, files in os.walk(m):
 			for file in files:
 				src = os.path.join(root, file)
 				print(f"src: {src}")
-				rel = os.path.relpath(src, mnt)
+				rel = os.path.relpath(src, m)
 				print(f"rel: {rel}")
 				cat = categorise_path(rel)
 				print(f"cat: {cat}")
-				dst = os.path.join(dest, cat, rel)
+				dst = os.path.join(dst, cat, rel)
 				print(f"dst: {dst}")
 				os.makedirs(os.path.dirname(dst), exist_ok=True)
 				shutil.move(src, dst)
@@ -153,6 +160,7 @@ def move(mount_points, dest):
 
 
 def copy_testmedia(mount_point):
+	""" Copy media to mount point for testing. """
 	for i in os.listdir("testmedia"):
 		src = os.path.join("testmedia", i)
 		dst = os.path.join(mount_point, i)
@@ -163,7 +171,8 @@ def copy_testmedia(mount_point):
 
 
 
-def offload(destination):
+def offload(dst):
+	""" Offload all files to `dst`. """
 	device_path = get_removable_devices()
 	print(f"removable devices: {device_path}")
 
@@ -178,5 +187,5 @@ def offload(destination):
 
 	#copy_testmedia(mount_points[0]) #- testing
 
-	moved = move(mount_points, destination)
+	moved = move(mount_points, dst)
 	return moved
