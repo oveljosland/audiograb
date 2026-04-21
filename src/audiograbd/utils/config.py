@@ -1,4 +1,4 @@
-# codnig loader. downloads config from a remote server, caches it,
+# config loader. downloads config from a remote server, caches it,
 # and falls back to cache or local file if download failss
 
 import os

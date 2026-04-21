@@ -1,6 +1,4 @@
-# modem driver
-
-INET_RETRIES = 15
+import socket
 
 def check_internet_connectivity(timeout=3):
 	try:

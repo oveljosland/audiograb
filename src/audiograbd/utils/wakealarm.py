@@ -1,8 +1,10 @@
 import subprocess
-import json
+
+
 
 SYSFS_WAKEALARM = '/sys/class/rtc/rtc0/wakealarm'
 KERNEL_INFO_RTC = '/proc/driver/rtc'
+
 
 
 def alarm_irq_enabled():

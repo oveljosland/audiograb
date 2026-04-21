@@ -175,7 +175,7 @@ if __name__ == "__main__":
 
 	"""
 	NOTE: should never reach this point,
-	but in the unlikely event it does we exit explicitly.	
+	but in the unlikely event it does, we exit.	
 	"""
 	exit(0)
 

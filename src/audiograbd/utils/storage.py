@@ -2,8 +2,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from google.cloud.storage import Client, transfer_manager
 
-# https://www.geeksforgeeks.org/python/abstract-classes-in-python/
-# https://docs.cloud.google.com/storage/docs/samples?language=python
+
 
 class StorageProvider(ABC):
 	@abstractmethod
