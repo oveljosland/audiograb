@@ -5,16 +5,11 @@
 
 import os
 import time
-import json
-import shutil
 import uuid
 import subprocess
 import logging
 
-
-from audiograbd.utils.wakealarm import print_kernel_info
 from audiograbd.utils.wakealarm import set_wakealarm, disable_wakealarm
-from audiograbd.utils.bat import get_battery_voltage
 from audiograbd.utils.device import offload
 from audiograbd.utils.transcode import transcode
 from audiograbd.utils.config import load_config
