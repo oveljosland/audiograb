@@ -20,12 +20,8 @@ from audiograbd.utils.storage import GCSProvider
 
 
 
-
-
-
 def halt():
-	"""
-	Ask the OS to halt the system.
+	"""Tell the OS to halt the system.
 	The `POWER_OFF_ON_HALT` EEPROM flag must be set to `1`.
 	"""
 	try:
@@ -34,32 +30,21 @@ def halt():
 		print(f"failed to halt: {e}")
 
 
-def ntp_synced():
-	output = subprocess.run(
-		["timedatectl", "show", "-p", "NTPSynchronized", "--value"],
-		capture_output=True,
-		text=True
-	)
-	return output.stdout.strip() == "yes"
-
-
-
-
 
 def create_upload_directory(config):
-	"""
-	Create upload dir in `/tmp` with timestamp and uuid.
-	On Raspberry Pi OS, `/tmp` is a `tmpfs`, which means
-	it is stored in memory and will be erased on reboot.
+	"""Create upload directory in `/tmp` with a timestamp and UUID.
+	On Raspberry Pi OS, `/tmp` is a `tmpfs`, which means it will be erased when shutting down.
 	"""
 	timestamp = time.strftime(config.get('date_time_format', "%Y%m%d-%H%M%S"))
-	uid = str(uuid.uuid4())[:8] # unique id
+	uid = str(uuid.uuid4())[:8]
 	upload_dir = os.path.join(
+		# if no project name is set, use audiograb as the name
 		'/tmp', f"{config.get('project_name', 'audiograb')}-{timestamp}-{uid}"
 	)
 	os.makedirs(os.path.join(upload_dir, "data"), exist_ok=True)
 	os.makedirs(os.path.join(upload_dir, "log", "telemetry"), exist_ok=True)
 	return upload_dir
+
 
 
 
@@ -76,8 +61,6 @@ if __name__ == "__main__":
 		#set_wakealarm(10)
 		#halt()
 
-	#print(f"battery voltage: {get_battery_voltage()}V")
-	#print(f"ntp synced     : {ntp_synced()}")
 
 	print("\n--- finding removable devices ------------\n")
 
@@ -137,7 +120,7 @@ if __name__ == "__main__":
 
 
 	print("\n--- scheduling next alarm ----------------\n")
-	# schedule the next wakeup if the scheduler is enabled
+	# schedule the next wake alarm if the scheduler is enabled
 	scheduler = config.get('scheduler', {})
 	if scheduler.get('enabled'):
 		interval = scheduler.get('interval_minutes')
@@ -150,11 +133,6 @@ if __name__ == "__main__":
 	
 	# time to die
 	halt()
-
-	"""
-	NOTE: should never reach this point,
-	but in the unlikely event it does we exit explicitly.	
-	"""
 	exit(0)
 
 
