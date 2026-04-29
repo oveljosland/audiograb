@@ -37,8 +37,6 @@
 	},
 
 	"speech-detection": {
-		"enabled": true,
-		"model": "silero_vad",
-		"repo_or_dir": "snakers4/silero-vad"
+		"enabled": true
 	}
 }

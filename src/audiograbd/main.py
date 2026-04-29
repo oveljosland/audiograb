@@ -14,7 +14,7 @@ from audiograbd.utils.device import offload
 from audiograbd.utils.transcode import transcode
 from audiograbd.utils.config import load_config
 from audiograbd.utils.storage import GCSProvider
-from audiograbd.model.silero import get_timestamps
+from audiograbd.models.speech import mute
 
 
 
@@ -86,13 +86,19 @@ if __name__ == "__main__":
 	
 
 	print("\n--- speech detection ---------------------\n")
-	"""
-	for all files in the upload directory, get speech timestamps and save them, then mute the speech segments in the original file
-	"""
-	
-	timestamps = get_timestamps(upload_directory)
-	print(f"timestamps: {timestamps}")
 
+	detect_speech = config.get("speech-detection", {})
+	if detect_speech.get("enabled", False):
+		print("speech detection enabled")
+		try:
+			results = mute(upload_directory, debug=config.get("debug", False))
+			for path, timestamps in results.items():
+				print(f"{path}: {len(timestamps)} speech segment(s)")
+		except Exception as e:
+			print(f"speech detection failed: {e}")
+	else:
+		print("speech detection disabled")
+	
 	print("\n--- transcoding --------------------------\n")
 
 	transcode(upload_directory, config)
