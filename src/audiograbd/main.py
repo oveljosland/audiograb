@@ -16,7 +16,7 @@ from audiograbd.utils.wakealarm import set_wakealarm, disable_wakealarm
 from audiograbd.utils.device import offload_to
 from audiograbd.utils.transcode import transcode
 from audiograbd.utils.config import load_config
-#from audiograbd.utils.storage import GCSProvider
+from audiograbd.utils.storage import GCSProvider, Sigma2Provider
 from audiograbd.models.speech import mute
 
 
@@ -68,6 +68,7 @@ def create_upload_directory(config):
 
 if __name__ == "__main__": 
 
+	start_time = time.time()
 	logger.info("Loading config...")
 
 	try:
@@ -108,6 +109,7 @@ if __name__ == "__main__":
 	logger.info("Transcoding files...")
 	transcode(upload_directory, config)
 	
+	logger.info("Uploading files...")
 	storage = config.get('storage', {})
 	provider = storage.get('provider')
 	if provider == "gcs":
@@ -127,6 +129,8 @@ if __name__ == "__main__":
 	else:
 		logger.warning("No valid storage provider configured, skipping upload")
 
+	total_time = time.time() - start_time
+	logger.info(f"Total execution time: {total_time:.2f} seconds")
 	exit(0)
 	logger.info("Scheduling next alarm...")
 	scheduler = config.get('scheduler', {})
