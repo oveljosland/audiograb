@@ -10,6 +10,8 @@ import shutil
 import uuid
 import subprocess
 import logging
+import csv
+from datetime import datetime
 
 
 from audiograbd.utils.wakealarm import print_kernel_info
@@ -18,7 +20,7 @@ from audiograbd.utils.bat import get_battery_voltage
 from audiograbd.utils.device import offload
 from audiograbd.utils.transcode import transcode
 from audiograbd.utils.config import load_config
-from audiograbd.utils.storage import GCSProvider
+from audiograbd.utils.storage import GCSProvider, Sigma2Provider
 from audiograbd.utils.gpio import SD_interface, wait_for_quiet_SD_lines, init_sd_interface_pins, change_sd_host_to_cm, change_sd_host_to_ext
 #from audiograbd.utils.model import speech_timestamps
 
@@ -27,6 +29,101 @@ from audiograbd.utils.gpio import SD_interface, wait_for_quiet_SD_lines, init_sd
 
 
 
+def log_to_csv(file_path, data: dict):
+    file_exists = os.path.isfile(file_path)
+
+    with open(file_path, "a", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=data.keys())
+
+        if not file_exists:
+            writer.writeheader()
+
+        writer.writerow(data)
+
+def run_once():
+	start_time = time.time()
+	print("\n--- loading config file ------------------\n")
+
+	try:
+		config = load_config()
+		print("config loaded")
+	except RuntimeError as e:
+		print(f"failed to load config: {e}")
+ 
+	print("\n--- Ensure gpio lines are set correct ------------\n")
+	
+	try:
+		init_sd_interface_pins()
+	except:
+		print("Bad pin Factory")
+
+
+	print("\n--- listening to sd lines and change sd host\n")
+	
+	try:
+		wait_for_quiet_SD_lines()
+	except:
+		print("likely bad pinmanufacture")
+
+
+
+	print("\n--- finding removable devices ------------\n")
+	
+	upload_directory = create_upload_directory(config)
+
+	try:
+		offload(upload_directory)
+	except:
+		print("no upload directory found")
+	
+
+	print("\n--- Unmount in system and change sd host")
+
+	
+	#do unmount of sd card	
+	try:
+		change_sd_host_to_cm()
+	except:
+		print("Likely bad pin factory ")
+
+	
+	print("\n--- speech detection ---------------------\n")
+
+
+	print("\n--- transcoding --------------------------\n")
+
+	transcode(upload_directory, config)
+	
+	print("\n--- uploading ----------------------------\n")
+
+
+	storage = config.get('storage', {})
+	provider = storage.get('provider')
+	provider = "sigma2"
+	if provider == "gcs":
+		
+		gcs_config = storage.get('gcs', {})
+		bucket_name = gcs_config.get('bucket_name')
+		if bucket_name is None:
+			print("bucket name missing from config")
+		else:
+			gcs = GCSProvider(bucket_name)
+			gcs.upload(upload_directory)
+	
+	elif provider == "sigma2":
+		username = storage.get('sigma2', {}).get('username')
+		port = storage.get('sigma2', {}).get('port')
+		sigma2 = Sigma2Provider()
+		sigma2.upload("/home/jonas/folder/test_file.txt", str(username), port)
+	else:
+		print("no valid storage provider configured, skipping upload")
+
+	end_time = time.time()
+	total_time = end_time - start_time #total time for the whole process
+	return total_time
+	
+
+	#print(f"\n--- TOTAL RUNTIME: {total_time:.2f} seconds ---\n")
 
 
 def halt():
@@ -72,7 +169,9 @@ def create_upload_directory(config):
 
 if __name__ == "__main__": 
 
+	
 	print("\n--- loading config file ------------------\n")
+	start_time = time.time()
 
 	try:
 		config = load_config()
@@ -98,7 +197,7 @@ if __name__ == "__main__":
 
 
 	print("\n--- listening to sd lines and change sd host\n")
- 
+	
 	try:
 		wait_for_quiet_SD_lines()
 	except:
@@ -107,7 +206,7 @@ if __name__ == "__main__":
 
 
 	print("\n--- finding removable devices ------------\n")
-
+	
 	upload_directory = create_upload_directory(config)
 
 	try:
@@ -125,7 +224,7 @@ if __name__ == "__main__":
 	except:
 		print("Likely bad pin factory ")
 
-
+	
 	print("\n--- speech detection ---------------------\n")
 	
 	"""
@@ -144,6 +243,7 @@ if __name__ == "__main__":
 
 	storage = config.get('storage', {})
 	provider = storage.get('provider')
+	#provider = "sigma2"
 	if provider == "gcs":
 		
 		gcs_config = storage.get('gcs', {})
@@ -162,6 +262,18 @@ if __name__ == "__main__":
 	else:
 		print("no valid storage provider configured, skipping upload")
 
+	end_time = time.time()
+	total_time = end_time - start_time #total time for the whole process, from start to finish, including upload and transcoding and speech detection and everything. Not just the time it took to upload.
+
+	log_to_csv(
+		"/home/jonas/folder/testrun_dir/testrun.csv", 
+		{
+        "Timestamp": datetime.now(),
+        "Total_time": total_time
+    	}
+	)
+
+	print(f"\n--- TOTAL RUNTIME: {total_time:.2f} seconds ---\n")
 
 	exit(0)
 	print("\n--- scheduling next alarm ----------------\n")
