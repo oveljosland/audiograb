@@ -3,11 +3,15 @@ import re
 import json
 import shutil
 import subprocess
+import logging
+from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 
 def get_block_devices_json():
-	""" Returns a list of block devices as JSON. """
+	"""Returns a list of block devices as JSON."""
 	output = subprocess.run([
 		"lsblk", "-J", "-b", # print size in bytes
 		"-o", "NAME,TYPE,SIZE,RM,FSTYPE,MOUNTPOINTS" # only relevant fields
@@ -20,7 +24,7 @@ def get_block_devices_json():
 
 
 def get_removable_devices():
-	""" Returns the path of all removable block devices. """
+	"""Returns the path of all removable block devices."""
 	devices = get_block_devices_json()
 	removable = []
 
@@ -41,8 +45,7 @@ def get_removable_devices():
 
 
 def get_partitions(device_path, return_largest=False):
-	"""
-	Returns the partitions of the device.
+	"""Returns the partitions of the device.
 	Optionally return the largest partition.
 	"""
 	devices = get_block_devices_json()
@@ -125,38 +128,38 @@ def power_off(device_path):
 
 
 
-def move(mnt, dst):
-	"""
-	Move all files from `mnt` to `dst`.
-
-	The files are categorised by their path such that telemetry and logs end up in
-	`dst/log/telemetry` and everything else in `dst/data`.
-	
+def move_files(mount_points, destination):
+	"""Move all files from the mount points to `destination`.
 	Returns a list of the absolute destination paths.
 	"""
 
-	def categorise_path(path):
-		path = path.lower()
-		if 'log' in path or 'telemetry' in path:
-			return os.path.join('log', 'telemetry')
-		return 'data'
+	destination_path = Path(destination).resolve()
+	destination_path.mkdir(parents=True, exist_ok=True)
 
-	moved = []
-	for m in mnt:
-		for root, _, files in os.walk(m):
-			for file in files:
-				src = os.path.join(root, file)
-				print(f"src: {src}")
-				rel = os.path.relpath(src, m)
-				print(f"rel: {rel}")
-				cat = categorise_path(rel)
-				print(f"cat: {cat}")
-				dst = os.path.join(dst, cat, rel)
-				print(f"dst: {dst}")
-				os.makedirs(os.path.dirname(dst), exist_ok=True)
-				shutil.move(src, dst)
-				moved.append(dst)
-	return moved
+	moved_files = []
+	for mount_point in mount_points:
+		src_root = Path(mount_point)
+		if not src_root.exists():
+			raise FileNotFoundError(f"Mount point not found: {src_root}")
+
+		if src_root.is_file():
+			target = destination_path / src_root.name
+			target.parent.mkdir(parents=True, exist_ok=True)
+			shutil.move(str(src_root), str(target))
+			moved_files.append(str(target.resolve()))
+			continue
+
+		for src in sorted(src_root.rglob("*")):
+			if not src.is_file():
+				continue
+
+			relative_path = src.relative_to(src_root)
+			target = destination_path / relative_path
+			target.parent.mkdir(parents=True, exist_ok=True)
+			shutil.move(str(src), str(target))
+			moved_files.append(str(target.resolve()))
+
+	return moved_files
 
 
 def copy_testmedia(mount_point):
@@ -171,21 +174,22 @@ def copy_testmedia(mount_point):
 
 
 
-def offload(dst):
-	""" Offload all files to `dst`. """
+def offload_to(dst):
+	"""Move all files from all removable devices to `dst`.
+	Returns a list of the absolute destination paths.
+	"""
 	device_path = get_removable_devices()
-	print(f"removable devices: {device_path}")
+	logger.info(f"Found removable device: {device_path}")
 
 	if not device_path:
-		raise RuntimeError("no removable devices found")
+		raise RuntimeError("No removable devices found")
 
 	partitions = get_partitions(device_path)
-	print(f"partitions: {partitions}")
+	logger.info(f"Found partitions: {partitions}")
 
 	mount_points = mount_all_partitions(device_path)
-	print(f"mount points: {mount_points}")
+	logger.info(f"Mount points: {mount_points}")
 
-	#copy_testmedia(mount_points[0]) #- testing
-
-	moved = move(mount_points, dst)
+	moved = move_files(mount_points, dst)
+	logger.info(f"Moved {len(moved)} files to: {moved}")
 	return moved
