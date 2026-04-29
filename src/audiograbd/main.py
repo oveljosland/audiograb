@@ -71,7 +71,7 @@ if __name__ == "__main__":
 	logger.info("Loading config...")
 
 	try:
-		config = load_config()
+		config = load_config(force_backup=True)
 		configure_logging(config)
 		logger.info("Config loaded")
 	except RuntimeError as e:
@@ -109,7 +109,7 @@ if __name__ == "__main__":
 	logger.info("Transcoding files...")
 	transcode(upload_directory, config)
 	
-
+	exit(0)
 	storage = config.get('storage', {})
 	provider = storage.get('provider')
 	if provider == "gcs":
