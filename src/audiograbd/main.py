@@ -122,8 +122,10 @@ if __name__ == "__main__":
 			gcs.upload(upload_directory)
 	
 	elif provider == "sigma2":
-		# TODO: implement uploading to NIRD Sigma2
-		pass
+		username = storage.get('sigma2', {}).get('username')
+		port = storage.get('sigma2', {}).get('port')
+		sigma2 = Sigma2Provider()
+		sigma2.upload("/home/jonas/folder/test_file.txt", str(username), port) #TODO: Need a testfile path
 	else:
 		logger.warning("No valid storage provider configured, skipping upload")
 
