@@ -16,6 +16,16 @@ from audiograbd.utils.config import load_config
 from audiograbd.utils.storage import GCSProvider
 from audiograbd.models.speech import mute
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('/tmp/audiograb.log', mode='a')
+    ]
+)
+logger = logging.getLogger(__name__)
+
 
 
 
@@ -27,7 +37,7 @@ def halt():
 	try:
 		subprocess.run(["systemctl", "halt"], check=True)
 	except Exception as e:
-		print(f"failed to halt: {e}")
+		logger.error(f"failed to halt: {e}")
 
 
 
@@ -51,26 +61,25 @@ def create_upload_directory(config):
 
 if __name__ == "__main__": 
 
-	print("\n--- loading config file ------------------\n")
+	logger.info("Loading config...")
 
 	try:
 		config = load_config()
-		print("config loaded")
+		logger.info("Config loaded")
 	except RuntimeError as e:
-		print(f"failed to load config: {e}")
+		logger.error(f"Failed to load config: {e}")
 		# when deployed
 		#set_wakealarm(10)
 		#halt()
 
 
-	print("\n--- finding removable devices ------------\n")
-
+	logger.info("Creating upload directory...")
 	upload_directory = create_upload_directory(config)
 
 	try:
-		moved = offload(upload_directory)
+		moved = offload_to(upload_directory)
 	except RuntimeError as e:
-		print(f"failed to offload to {upload_directory}: {e}")
+		logger.error(f"failed to offload to {upload_directory}: {e}")
 		"""
 		TODO:
 		
@@ -85,25 +94,25 @@ if __name__ == "__main__":
 
 	
 
-	print("\n--- speech detection ---------------------\n")
+	logger.info("--- speech detection ---------------------")
 
 	detect_speech = config.get("speech-detection", {})
 	if detect_speech.get("enabled", False):
-		print("speech detection enabled")
+		logger.info("speech detection enabled")
 		try:
 			results = mute(upload_directory, debug=config.get("debug", False))
 			for path, timestamps in results.items():
-				print(f"{path}: {len(timestamps)} speech segment(s)")
+				logger.info(f"{path}: {len(timestamps)} speech segment(s)")
 		except Exception as e:
-			print(f"speech detection failed: {e}")
+			logger.error(f"speech detection failed: {e}")
 	else:
-		print("speech detection disabled")
+		logger.info("speech detection disabled")
 	
-	print("\n--- transcoding --------------------------\n")
+	logger.info("--- transcoding --------------------------")
 
 	transcode(upload_directory, config)
 	
-	print("\n--- uploading ----------------------------\n")
+	logger.info("--- uploading ----------------------------")
 
 	exit(0)
 
@@ -113,7 +122,7 @@ if __name__ == "__main__":
 		gcs_config = storage.get('gcs', {})
 		bucket_name = gcs_config.get('bucket_name')
 		if bucket_name is None:
-			print("bucket name missing from config")
+			logger.error("bucket name missing from config")
 		else:
 			gcs = GCSProvider(bucket_name)
 			gcs.upload(upload_directory)
@@ -122,18 +131,18 @@ if __name__ == "__main__":
 		# TODO: implement uploading to NIRD Sigma2
 		pass
 	else:
-		print("no valid storage provider configured, skipping upload")
+		logger.warning("no valid storage provider configured, skipping upload")
 
 
-	print("\n--- scheduling next alarm ----------------\n")
+	logger.info("--- scheduling next alarm ----------------")
 	# schedule the next wake alarm if the scheduler is enabled
 	scheduler = config.get('scheduler', {})
 	if scheduler.get('enabled'):
 		interval = scheduler.get('interval_minutes')
 		if interval is None or interval < 0:
-			print(f"invalid wake interval ({interval})")
+			logger.warning(f"invalid wake interval ({interval})")
 		else:
-			print(f"setting alarm to {interval} minutes")
+			logger.info(f"setting alarm to {interval} minutes")
 			set_wakealarm(interval)
 
 	

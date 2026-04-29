@@ -1,4 +1,7 @@
 import subprocess
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -41,8 +44,8 @@ def set_wakealarm(minutes: int, path=SYSFS_WAKEALARM) -> None:
 		"""
 		TODO: log failed to set wakealarm
 		"""
-		print(output.stdout)
-		print(output.stderr)
+		logger.debug(f"wakectl stdout: {output.stdout}")
+		logger.debug(f"wakectl stderr: {output.stderr}")
 
 
 
@@ -60,7 +63,7 @@ def disable_wakealarm(path=SYSFS_WAKEALARM):
 		"""
 		TODO: log failed to disable wakealarm
 		"""
-		print(output.stdout)
+		logger.debug(f"wakectl stdout: {output.stdout}")
 
 
 
@@ -72,6 +75,6 @@ def print_kernel_info(path=KERNEL_INFO_RTC):
 		capture_output=True,
 		text=True
 	)
-	print(output.stdout)
+	logger.debug(f"RTC kernel info: {output.stdout}")
 
 

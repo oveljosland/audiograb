@@ -1,5 +1,8 @@
 import gpiozero
 import subprocess
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class SD_interface:
@@ -21,7 +24,7 @@ def wait_for_quiet_SD_lines():
   
 	timeout = subprocess.run(["/home/jonas/folder/audiograb/src/pinctl/pinread"], capture_output=True)
  
-	print("timeout:", timeout)
+	logger.debug(f"Timeout while waiting for quiet SD-bus: {timeout}")
 
 def init_sd_interface_pins():
 	"""
@@ -33,7 +36,7 @@ def init_sd_interface_pins():
 	sd.S_EN_SWITCH_pin.blink(on_time = 0.1, off_time = 0, n= 1, background = False) #turn on swich
 	sd.S_SWITCH_pin.blink(on_time = 0.1, off_time = 0, n= 1, background = False) #set switch to connect to external device
 	sd.S_EN_VOUT_pin.blink(on_time = 0.1, off_time = 0, n= 1, background = False) #enable output voltage
-	print("pins set")
+	logger.info("GPIO pins initialised")
 
 def change_sd_host_to_cm():
 	"""

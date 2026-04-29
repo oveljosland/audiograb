@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 from google.cloud.storage import Client, transfer_manager
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -32,7 +35,7 @@ class GCSProvider(StorageProvider):
 		# convert them to strings
 		string_paths = [str(path) for path in relative_paths]
 
-		print("found {} files.".format(len(string_paths)))
+		logger.info("Found {} files.".format(len(string_paths)))
 
 		results = transfer_manager.upload_many_from_filenames(
 			self.bucket,
@@ -47,9 +50,9 @@ class GCSProvider(StorageProvider):
 		"""
 		for name, result in zip(string_paths, results):
 			if isinstance(result, Exception):
-				print("failed to upload {} due to exception: {}".format(name, result))
+				logger.error("Failed to upload {} due to exception: {}".format(name, result))
 			else:
-				print("uploaded {} to {}.".format(name, self.bucket.name))
+				logger.info("Uploaded {} to {}.".format(name, self.bucket.name))
 
 
 class Sigma2Provider(StorageProvider):
