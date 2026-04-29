@@ -13,7 +13,7 @@ CACHE_DIR = Path("~/.config/audiograb/").expanduser()
 
 CACHED_CONFIG = CACHE_DIR / "config.json"
 REMOTE_CONFIG = "https://folk.ntnu.no/ovelj/config.json"
-BACKUP_CONFIG = "src/config/example.json"
+BACKUP_CONFIG = "src/config/example.json" # double check this path
 
 
 
