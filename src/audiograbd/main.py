@@ -9,21 +9,17 @@ import uuid
 import subprocess
 import logging
 
+from pathlib import Path
+
+from audiograbd.utils.logger import configure_logging
 from audiograbd.utils.wakealarm import set_wakealarm, disable_wakealarm
-from audiograbd.utils.device import offload
+from audiograbd.utils.device import offload_to
 from audiograbd.utils.transcode import transcode
 from audiograbd.utils.config import load_config
 from audiograbd.utils.storage import GCSProvider
 from audiograbd.models.speech import mute
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('/tmp/audiograb.log', mode='a')
-    ]
-)
+
 logger = logging.getLogger(__name__)
 
 
@@ -40,8 +36,8 @@ def halt():
 		logger.error(f"failed to halt: {e}")
 
 
-
-def create_upload_directory(config):
+'''
+def create_upload_directory2(config):
 	"""Create upload directory in `/tmp` with a timestamp and UUID.
 	On Raspberry Pi OS, `/tmp` is a `tmpfs`, which means it will be erased when shutting down.
 	"""
@@ -54,6 +50,24 @@ def create_upload_directory(config):
 	os.makedirs(os.path.join(upload_dir, "data"), exist_ok=True)
 	os.makedirs(os.path.join(upload_dir, "log", "telemetry"), exist_ok=True)
 	return upload_dir
+'''
+
+def create_upload_directory(config):
+	"""Create upload directory in `/tmp` with a timestamp and UUID.
+	On Raspberry Pi OS, `/tmp` is a `tmpfs`, which means it will be erased when shutting down.
+	"""
+	timestamp = time.strftime(config.get('date_time_format', "%Y%m%d-%H%M%S"))
+	uid = str(uuid.uuid4())[:8]
+
+	project_name = config.get('project_name', 'audiograb')
+
+	base = Path("/tmp") / f"{project_name}-{timestamp}-{uid}"
+
+	# create subdirectories
+	(base / "data").mkdir(parents=True, exist_ok=True)
+	(base / "log" ).mkdir(parents=True, exist_ok=True)
+
+	return base
 
 
 
@@ -65,6 +79,7 @@ if __name__ == "__main__":
 
 	try:
 		config = load_config()
+		configure_logging(config)
 		logger.info("Config loaded")
 	except RuntimeError as e:
 		logger.error(f"Failed to load config: {e}")
