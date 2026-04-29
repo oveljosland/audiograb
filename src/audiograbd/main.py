@@ -16,7 +16,7 @@ from audiograbd.utils.wakealarm import set_wakealarm, disable_wakealarm
 from audiograbd.utils.device import offload_to
 from audiograbd.utils.transcode import transcode
 from audiograbd.utils.config import load_config
-from audiograbd.utils.storage import GCSProvider
+#from audiograbd.utils.storage import GCSProvider
 from audiograbd.models.speech import mute
 
 
@@ -93,7 +93,6 @@ if __name__ == "__main__":
 		logger.error(f"Failed to offload to {upload_directory}: {e}")
 
 
-
 	detect_speech = config.get("speech-detection", {})
 	if detect_speech.get("enabled", False):
 		logger.info("Speech detection enabled")
@@ -109,7 +108,6 @@ if __name__ == "__main__":
 	logger.info("Transcoding files...")
 	transcode(upload_directory, config)
 	
-	exit(0)
 	storage = config.get('storage', {})
 	provider = storage.get('provider')
 	if provider == "gcs":
@@ -125,11 +123,11 @@ if __name__ == "__main__":
 		username = storage.get('sigma2', {}).get('username')
 		port = storage.get('sigma2', {}).get('port')
 		sigma2 = Sigma2Provider()
-		sigma2.upload("/home/jonas/folder/test_file.txt", str(username), port) #TODO: Need a testfile path
+		sigma2.upload("/home/jonas/folder/test_file.txt", str(username), port) #Need correct testfile path
 	else:
 		logger.warning("No valid storage provider configured, skipping upload")
 
-
+	exit(0)
 	logger.info("Scheduling next alarm...")
 	scheduler = config.get('scheduler', {})
 	if scheduler.get('enabled'):
