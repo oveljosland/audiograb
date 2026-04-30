@@ -125,7 +125,6 @@ if __name__ == "__main__":
 		username = storage.get('sigma2', {}).get('username')
 		port = storage.get('sigma2', {}).get('port')
 		sigma2 = Sigma2Provider()
-		sigma2.upload("/home/jonas/folder/test_file.txt", str(username), port) #Need correct testfile path
 	else:
 		logger.warning("No valid storage provider configured, skipping upload")
 
