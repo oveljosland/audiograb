@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-#from google.cloud.storage import Client, transfer_manager
+from google.cloud.storage import Client, transfer_manager
 import subprocess
 import logging
 
