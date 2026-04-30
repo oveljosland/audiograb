@@ -130,8 +130,8 @@ if __name__ == "__main__":
 		logger.warning("No valid storage provider configured, skipping upload")
 
 	total_time = time.time() - start_time
-	logger.info(f"Total execution time: {total_time:.2f} seconds")
-	exit(0)
+	logger.info(f"Total time: {total_time:.2f} seconds")
+	
 	logger.info("Scheduling next alarm...")
 	scheduler = config.get('scheduler', {})
 	if scheduler.get('enabled'):
