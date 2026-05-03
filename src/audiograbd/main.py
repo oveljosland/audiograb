@@ -52,6 +52,7 @@ def create_upload_directory(config):
 	timestamp = time.strftime(config.get('date_time_format', "%Y%m%d-%H%M%S"))
 	uid = str(uuid.uuid4())[:8]
 
+	# set project name, e.g. place of deployment
 	project_name = config.get('project_name', 'audiograb')
 
 	base = Path("/tmp") / f"{project_name}-{timestamp}-{uid}"
@@ -75,7 +76,6 @@ if __name__ == "__main__":
 		#config = load_config()
 		config = load_backup()
 		configure_logging(config)
-		logger.info("Config loaded")
 	except RuntimeError as e:
 		logger.error(f"Failed to load any config file: {e}")
 		if config.get('scheduler', {}).get('enabled', False):
