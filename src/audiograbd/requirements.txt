@@ -3,3 +3,5 @@ google-cloud-storage
 silero-vad
 gpiozero
 birdnet
+torchcodec
+torchaudio<2.9
