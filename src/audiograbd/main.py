@@ -8,14 +8,18 @@ import time
 import uuid
 import subprocess
 import logging
+import argparse
+import http.server
+import socketserver
+import threading
 
 from pathlib import Path
 
 from audiograbd.utils.logger import configure_logging
 from audiograbd.utils.wakealarm import set_wakealarm, disable_wakealarm
-from audiograbd.utils.device import offload_to
+from audiograbd.utils.device import offload_to, copy_testmedia_to_removable_devices
 from audiograbd.utils.transcode import transcode
-from audiograbd.utils.config import load_config
+from audiograbd.utils.config import load_config, load_backup
 from audiograbd.utils.storage import GCSProvider, Sigma2Provider
 from audiograbd.models.speech import mute
 
@@ -44,6 +48,26 @@ def halt():
 		logger.error(f"failed to halt: {e}")
 
 
+def serve_directory(directory, port):
+	"""Start a simple HTTP server for the given directory.
+	Runs in a background thread.
+	"""
+	directory = Path(directory)
+	if not directory.exists():
+		logger.warning(f"Directory does not exist: {directory}")
+		return
+
+	os.chdir(directory)
+	handler = http.server.SimpleHTTPRequestHandler
+	
+	try:
+		with socketserver.TCPServer(("", port), handler) as httpd:
+			logger.info(f"Web server running on http://localhost:{port}")
+			logger.info(f"Serving files from: {directory}")
+			httpd.serve_forever()
+	except Exception as e:
+		logger.error(f"Failed to start web server: {e}")
+
 
 def create_upload_directory(config):
 	"""Create upload directory in `/tmp` with a timestamp and UUID.
@@ -55,14 +79,13 @@ def create_upload_directory(config):
 	# set project name, e.g. place of deployment
 	project_name = config.get('project_name', 'audiograb')
 
-	logger.info(f"Create upload directory at {upload_directory}...")
-
 	base = Path("/tmp") / f"{project_name}-{timestamp}-{uid}"
 
 	# create subdirectories
 	(base / "data").mkdir(parents=True, exist_ok=True)
 	(base / "logs" ).mkdir(parents=True, exist_ok=True)
 
+	logger.info(f"Created upload directory at {base}")
 	return base
 
 
@@ -70,6 +93,10 @@ def create_upload_directory(config):
 
 
 if __name__ == "__main__": 
+	parser = argparse.ArgumentParser(description="audiograbd - extract, process, and upload audio from embedded wildlife recorders")
+	parser.add_argument('--serve-port', type=int, default=None, 
+		help="Start a web server on this port to browse processed files")
+	args = parser.parse_args()
 
 	start_time = time.time()
 	logger.info("Loading config...")
@@ -77,7 +104,7 @@ if __name__ == "__main__":
 	try:
 		#config = load_config()
 		config = load_backup()
-		configure_logging(config)
+		configure_logging(config, upload_directory / "logs")
 	except RuntimeError as e:
 		logger.error(f"Failed to load any config file: {e}")
 		if config.get('scheduler', {}).get('enabled', False):
@@ -88,11 +115,14 @@ if __name__ == "__main__":
 
 	
 	upload_directory = create_upload_directory(config)
+	
 
+	# put test media on all connected removable devices
+	copy_testmedia_to_removable_devices()
 
 	try:
 		logger.info(f"Offloading data from all removable devices...")
-		moved = offload_to(upload_directory)
+		moved = offload_to(upload_directory / "data")
 	except RuntimeError as e:
 		logger.error(f"Failed to offload to {upload_directory}: {e}")
 
@@ -101,7 +131,7 @@ if __name__ == "__main__":
 	if detect_speech.get("enabled", False):
 		logger.info("Speech detection enabled")
 		try:
-			results = mute(upload_directory, debug=config.get("debug", False))
+			results = mute(upload_directory / "data", debug=config.get("debug", False))
 			for path, timestamps in results.items():
 				logger.info(f"{path}: {len(timestamps)} speech segment(s)")
 		except Exception as e:
@@ -110,8 +140,18 @@ if __name__ == "__main__":
 		logger.info("Speech detection disabled")
 	
 	logger.info("Transcoding files...")
-	transcode(upload_directory, config)
+	transcode(upload_directory / "data", config)
 	
+	if args.serve_port:
+		logger.info(f"Starting web server on port {args.serve_port}...")
+		server_thread = threading.Thread(target=serve_directory, args=(upload_directory, args.serve_port), daemon=True)
+		server_thread.start()
+		try:
+			while True:
+				time.sleep(1)
+		except KeyboardInterrupt:
+			logger.info("Stopping web server...")
+
 	logger.info("Uploading files...")
 	storage = config.get('storage', {})
 	provider = storage.get('provider')
