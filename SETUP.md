@@ -28,7 +28,7 @@ polkit.addRule(function(action, subject) {
 	}
 });
 ```
-And add the following lines to `/etc/polkit-1/rules.d/login.rules`:
+Add the following lines to `/etc/polkit-1/rules.d/login.rules`:
 ```
 polkit.addRule(function(action, subject) {
 	if ((
@@ -44,6 +44,37 @@ polkit.addRule(function(action, subject) {
 	}
 });
 ```
+Add the following lines to `/usr/share/polkit-1/actions/org.audiograbd.wakealarm.policy`:
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+  "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+  "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <action id="org.audiograbd.wakealarm">
+    <description>Set RTC wake alarm</description>
+    <message>Set RTC wake alarm</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>no</allow_active>
+    </defaults>
+  </action>
+</policyconfig>
+```
+
+Add the following lines to `/etc/polkit-1/rules.d/wakealarm.rules`:
+```
+polkit.addRule(function(action, subject) {
+    if (action.id === "org.audiograbd.wakealarm" &&
+        subject.user === "user") {
+        return polkit.Result.YES;
+    }
+});
+```
+
+
+
 
 ## GPIO Access
 To use GPIO, `gpiozero` requires access to `/dev/mem`. Add yourself to the `kmem` group:
@@ -51,20 +82,9 @@ To use GPIO, `gpiozero` requires access to `/dev/mem`. Add yourself to the `kmem
 sudo usermod -aG kmem "user"
 ``` 
 
-## Install `wakectl`
-Compile:
-```
-gcc wakectl.c -o wakectl
-```
-Move the binary to `/usr/local/bin`:
-```
-sudo mv wakectl /usr/local/bin/
-```
-Change the ownership of `wakectl` to `root`:
-```
-sudo chown root:root /usr/local/bin/wakectl
-```
+## Wakealarm helper
 Set permissions:
 ```
-sudo chmod 4755 /usr/local/bin/wakectl
+sudo chmod 755 /usr/local/bin/wakealarm
+chown root:root /usr/local/bin/wakealarm
 ```
