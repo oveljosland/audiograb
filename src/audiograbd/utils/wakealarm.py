@@ -78,3 +78,19 @@ def print_kernel_info(path=KERNEL_INFO_RTC):
 	logger.debug(f"RTC kernel info: {output.stdout}")
 
 
+
+def set_wakealarm2(minutes: int) -> None:
+	"""Set next wake alarm in minutes."""
+	output = subprocess.run(
+		["pkexec", "usr/local/bin/wakealarm", str(minutes*60)],
+		capture_output=True,
+		text=True
+	)
+	if output.returncode != 0 or not alarm_irq_enabled():
+		raise RuntimeError(f"Failed to set wake alarm: {output.stderr}")
+
+
+
+def disable_wakealarm2() -> None:
+	"""Disable the wake alarm."""
+	set_wakealarm2(0)
