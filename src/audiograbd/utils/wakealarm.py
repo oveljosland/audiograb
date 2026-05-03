@@ -4,10 +4,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-
-SYSFS_WAKEALARM = '/sys/class/rtc/rtc0/wakealarm'
 KERNEL_INFO_RTC = '/proc/driver/rtc'
-
 
 
 def alarm_irq_enabled() -> bool:
@@ -23,54 +20,10 @@ def alarm_irq_enabled() -> bool:
 
 
 
-def set_wakealarm(minutes: int, path=SYSFS_WAKEALARM) -> None:
-	"""Sets the wake alarm in minutes."""
-	if minutes < 0 or minutes is None:
-		"""
-		TODO: log something like "interval value error"
-		"""
-		return
-	
-	output = subprocess.run([
-		"wakectl", "-w", str(minutes*60), path
-		],
-		capture_output=True,
-		check=True,
-		text=True
-	)
-
-	# check if the alarm has been set
-	if not alarm_irq_enabled():
-		"""
-		TODO: log failed to set wakealarm
-		"""
-		logger.debug(f"wakectl stdout: {output.stdout}")
-		logger.debug(f"wakectl stderr: {output.stderr}")
-
-
-
-def disable_wakealarm(path=SYSFS_WAKEALARM):
-	"""Disable the wake alarm."""
-	output = subprocess.run([
-		"wakectl", "-w", str(0), path
-		],
-		capture_output=True,
-		check=True,
-		text=True
-	)
-	
-	if alarm_irq_enabled():
-		"""
-		TODO: log failed to disable wakealarm
-		"""
-		logger.debug(f"wakectl stdout: {output.stdout}")
-
-
-
-def print_kernel_info(path=KERNEL_INFO_RTC):
+def print_kernel_info() -> None:
 	"""Print RTC kernel info."""
 	output = subprocess.run([
-		"cat", path
+		"cat", KERNEL_INFO_RTC
 		],
 		capture_output=True,
 		text=True
@@ -79,8 +32,11 @@ def print_kernel_info(path=KERNEL_INFO_RTC):
 
 
 
-def set_wakealarm2(minutes: int) -> None:
+def set_wakealarm(minutes: int) -> None:
 	"""Set next wake alarm in minutes."""
+	if minutes < 0 or minutes is None:
+		logger.warning(f"Invalid wake interval ({minutes}), skipping wake alarm")
+		return
 	output = subprocess.run(
 		["pkexec", "usr/local/bin/wakealarm", str(minutes*60)],
 		capture_output=True,
@@ -91,6 +47,6 @@ def set_wakealarm2(minutes: int) -> None:
 
 
 
-def disable_wakealarm2() -> None:
+def disable_wakealarm() -> None:
 	"""Disable the wake alarm."""
-	set_wakealarm2(0)
+	set_wakealarm(0)

@@ -55,6 +55,8 @@ def create_upload_directory(config):
 	# set project name, e.g. place of deployment
 	project_name = config.get('project_name', 'audiograb')
 
+	logger.info(f"Create upload directory at {upload_directory}...")
+
 	base = Path("/tmp") / f"{project_name}-{timestamp}-{uid}"
 
 	# create subdirectories
@@ -86,7 +88,7 @@ if __name__ == "__main__":
 
 	
 	upload_directory = create_upload_directory(config)
-	logger.info(f"Create upload directory at {upload_directory}...")
+
 
 	try:
 		logger.info(f"Offloading data from all removable devices...")
