@@ -58,7 +58,7 @@ def create_upload_directory(config):
 
 	# create subdirectories
 	(base / "data").mkdir(parents=True, exist_ok=True)
-	(base / "log" ).mkdir(parents=True, exist_ok=True)
+	(base / "logs" ).mkdir(parents=True, exist_ok=True)
 
 	return base
 
