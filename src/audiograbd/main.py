@@ -72,7 +72,8 @@ if __name__ == "__main__":
 	logger.info("Loading config...")
 
 	try:
-		config = load_config(force_backup=True)
+		#config = load_config()
+		config = load_backup()
 		configure_logging(config)
 		logger.info("Config loaded")
 	except RuntimeError as e:

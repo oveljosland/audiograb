@@ -95,7 +95,7 @@ def load_backup(path=BACKUP_CONFIG):
 
 
 
-def load_config(url=REMOTE_CONFIG, cache=True, force_backup=False):
+def load_config(url=REMOTE_CONFIG, cache=True):
 	"""Load the config file.
 	
 	Priority
@@ -103,9 +103,6 @@ def load_config(url=REMOTE_CONFIG, cache=True, force_backup=False):
 	2. Cached
 	3. Backup
 	"""
-
-	if force_backup:
-		return load_backup()
 
 
 	logger.info(f"trying to download config from {url}")
