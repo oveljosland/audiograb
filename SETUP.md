@@ -88,3 +88,12 @@ Set permissions:
 sudo chmod 755 /usr/local/bin/wakealarm
 chown root:root /usr/local/bin/wakealarm
 ```
+
+
+## Running as a systemd service
+If running as a systemd service, make sure it has access to D-Bus:
+```
+[Service]
+User=user
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket
+```
