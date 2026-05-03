@@ -69,15 +69,12 @@ def serve_directory(directory, port):
 		logger.error(f"Failed to start web server: {e}")
 
 
-def create_upload_directory(config):
+def create_upload_directory(config, project_name):
 	"""Create upload directory in `/tmp` with a timestamp and UUID.
 	On Raspberry Pi OS, `/tmp` is a `tmpfs`, which means it will be erased when shutting down.
 	"""
 	timestamp = time.strftime(config.get('date_time_format', "%Y%m%d-%H%M%S"))
 	uid = str(uuid.uuid4())[:8]
-
-	# set project name, e.g. place of deployment
-	project_name = config.get('project_name', 'audiograb')
 
 	base = Path("/tmp") / f"{project_name}-{timestamp}-{uid}"
 
@@ -102,9 +99,19 @@ if __name__ == "__main__":
 	logger.info("Loading config...")
 
 	try:
+		
 		#config = load_config()
 		config = load_backup()
-		configure_logging(config, upload_directory / "logs")
+
+		# set project name, e.g. place of deployment
+		project_name = config.get('project_name', 'audiograb')
+
+		upload_directory = create_upload_directory(config, project_name)
+		data_dir = upload_directory / "data"
+		logs_dir = upload_directory / "logs"
+
+		logfile = logs_dir / f"{project_name}.log"
+		configure_logging(config, log_file=logfile)
 	except RuntimeError as e:
 		logger.error(f"Failed to load any config file: {e}")
 		if config.get('scheduler', {}).get('enabled', False):
@@ -114,7 +121,7 @@ if __name__ == "__main__":
 
 
 	
-	upload_directory = create_upload_directory(config)
+	
 	
 
 	# put test media on all connected removable devices
@@ -122,7 +129,7 @@ if __name__ == "__main__":
 
 	try:
 		logger.info(f"Offloading data from all removable devices...")
-		moved = offload_to(upload_directory / "data")
+		moved = offload_to(data_dir)
 	except RuntimeError as e:
 		logger.error(f"Failed to offload to {upload_directory}: {e}")
 
@@ -131,7 +138,7 @@ if __name__ == "__main__":
 	if detect_speech.get("enabled", False):
 		logger.info("Speech detection enabled")
 		try:
-			results = mute(upload_directory / "data", debug=config.get("debug", False))
+			results = mute(data_dir, debug=config.get("debug", False))
 			for path, timestamps in results.items():
 				logger.info(f"{path}: {len(timestamps)} speech segment(s)")
 		except Exception as e:
@@ -140,7 +147,7 @@ if __name__ == "__main__":
 		logger.info("Speech detection disabled")
 	
 	logger.info("Transcoding files...")
-	transcode(upload_directory / "data", config)
+	transcode(data_dir, config)
 	
 	if args.serve_port:
 		logger.info(f"Starting web server on port {args.serve_port}...")
@@ -171,8 +178,7 @@ if __name__ == "__main__":
 	else:
 		logger.warning("No valid storage provider configured, skipping upload")
 
-	total_time = time.time() - start_time
-	logger.info(f"Total time: {total_time:.2f} seconds")
+	
 	
 	logger.info("Scheduling next alarm...")
 	scheduler = config.get('scheduler', {})
@@ -184,6 +190,8 @@ if __name__ == "__main__":
 			logger.info(f"Next wake alarm scheduled in {interval} minutes")
 			set_wakealarm(interval)
 
+	
+	logger.info(f"Uptime: {time.time() - start_time:.2f} seconds")
 	
 	# time to die
 	logger.info("Halting...")
