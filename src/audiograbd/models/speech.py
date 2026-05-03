@@ -1,7 +1,10 @@
 import subprocess
+import logging
 from pathlib import Path
 from silero_vad import load_silero_vad, read_audio, get_speech_timestamps
 from audiograbd.utils.transcode import EXTENSIONS
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -90,13 +93,24 @@ def mute(path, model=None, debug=False):
 		for file_path in sorted(path.rglob("*")):
 			if file_path.suffix.lower() not in EXTENSIONS:
 				continue
-			timestamps = get_timestamps(file_path, model=model)
-			if timestamps:
-				mute_speech_segments(file_path, timestamps, debug=debug)
-			results[str(file_path)] = timestamps
+			try:
+				timestamps = get_timestamps(file_path, model=model)
+				if timestamps:
+					mute_speech_segments(file_path, timestamps, debug=debug)
+				results[str(file_path)] = timestamps
+			except Exception as e:
+				logger.warning(f"Skipping corrupted/unrecognised file {file_path}: {e}")
+				"""TODO: decide to skip or delete the file"""
+				# path.unlink(missing_ok=True)
 		return results
 
-	timestamps = get_timestamps(path, model=model)
-	if timestamps:
-		mute_speech_segments(path, timestamps, debug=debug)
-	return timestamps
+	try:
+		timestamps = get_timestamps(path, model=model)
+		if timestamps:
+			mute_speech_segments(path, timestamps, debug=debug)
+		return timestamps
+	except Exception as e:
+		logger.warning(f"Skipping corrupted/unrecognised file {path}: {e}")
+		"""TODO: decide to skip or delete the file"""
+		# path.unlink(missing_ok=True)
+		return []
