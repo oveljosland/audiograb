@@ -21,7 +21,7 @@ from audiograbd.utils.device import offload_to, copy_testmedia_to_removable_devi
 from audiograbd.utils.transcode import transcode
 from audiograbd.utils.config import load_config, load_backup
 from audiograbd.utils.storage import GCSProvider, Sigma2Provider
-from audiograbd.models.speech import mute
+from audiograbd.models.silero import mute
 
 
 logger = logging.getLogger(__name__)
