@@ -106,9 +106,9 @@ if __name__ == "__main__":
 		# set project name, e.g. place of deployment
 		project_name = config.get('project_name', 'audiograb')
 
-		upload_directory = create_upload_directory(config, project_name)
-		data_dir = upload_directory / "data"
-		logs_dir = upload_directory / "logs"
+		upload_dir = create_upload_directory(config, project_name)
+		data_dir = upload_dir / "data"
+		logs_dir = upload_dir / "logs"
 
 		logfile = logs_dir / f"{project_name}.log"
 		configure_logging(config, log_file=logfile)
@@ -131,8 +131,22 @@ if __name__ == "__main__":
 		logger.info(f"Offloading data from all removable devices...")
 		moved = offload_to(data_dir)
 	except RuntimeError as e:
-		logger.error(f"Failed to offload to {upload_directory}: {e}")
+		logger.error(f"Failed to offload to {upload_dir}: {e}")
 
+
+	birdnet_prediction = config.get("birdnet-prediction", {})
+	if birdnet_prediction.get("enabled", False):
+		logger.info("BirdNET prediction enabled")
+		try:
+			pass
+			"""
+			TODO: implement BirdNET prediction.
+			"""
+		except Exception as e:
+			logger.error(f"BirdNET prediction failed: {e}")
+	else:
+		logger.info("BirdNET prediction disabled")
+	
 
 	detect_speech = config.get("speech-detection", {})
 	if detect_speech.get("enabled", False):
@@ -149,9 +163,10 @@ if __name__ == "__main__":
 	logger.info("Transcoding files...")
 	transcode(data_dir, config)
 	
+
 	if args.serve_port:
 		logger.info(f"Starting web server on port {args.serve_port}...")
-		server_thread = threading.Thread(target=serve_directory, args=(upload_directory, args.serve_port), daemon=True)
+		server_thread = threading.Thread(target=serve_directory, args=(upload_dir, args.serve_port), daemon=True)
 		server_thread.start()
 		try:
 			while True:
@@ -169,7 +184,7 @@ if __name__ == "__main__":
 			logger.error("GCS bucket name missing from config")
 		else:
 			gcs = GCSProvider(bucket_name)
-			gcs.upload(upload_directory)
+			gcs.upload(upload_dir)
 	
 	elif provider == "sigma2":
 		username = storage.get('sigma2', {}).get('username')
