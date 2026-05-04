@@ -1,11 +1,37 @@
-import birdnet
+from birdnetlib.batch import DirectoryMultiProcessingAnalyzer
+from birdnetlib.analyzer import Analyzer
+from datetime import datetime
+from pprint import pprint
+
+# example from
+# https://github.com/joeweiss/birdnetlib/blob/main/examples/batch_multiprocessing_directory.py
+
+def on_analyze_directory_complete(recordings):
+	print("-" * 80)
+	print("directory_completed: recordings processed ", len(recordings))
+	print("-" * 80)
+
+	for recording in recordings:
+		print(recording.path)
+		if recording.error:
+			print("Error: ", recording.error_message)
+		else:
+			pprint(recording.detections)
+
+		print("-" * 80)
 
 
-def predict(species_list, path):
-	model = birdnet.load("acoustic", "2.4", "tf")
-	predictions = model.predict(
-		path,
-		# predict only the species from the file
-		custom_species_list=species_list,
-	)
-	return predictions.to_csv()
+analyzer = Analyzer()
+
+directory = "."
+batch = DirectoryMultiProcessingAnalyzer(
+	directory,
+	analyzers=[analyzer],
+	lon=-120.7463,
+	lat=35.4244,
+	date=datetime(year=2022, month=5, day=10),
+	min_conf=0.4,
+)
+
+batch.on_analyze_directory_complete = on_analyze_directory_complete
+batch.process()
