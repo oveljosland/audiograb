@@ -110,8 +110,8 @@ if __name__ == "__main__":
 		data_dir = upload_dir / "data"
 		logs_dir = upload_dir / "logs"
 
-		logfile = logs_dir / f"{project_name}.log"
-		configure_logging(config, log_file=logfile)
+		log_file = logs_dir / f"{project_name}.log"
+		configure_logging(config, log_file=log_file)
 	except RuntimeError as e:
 		logger.error(f"Failed to load any config file: {e}")
 		if config.get('scheduler', {}).get('enabled', False):
