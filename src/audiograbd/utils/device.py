@@ -24,7 +24,7 @@ def get_block_devices_json():
 
 
 def get_removable_devices():
-	"""Returns the path of all removable block devices."""
+	"""Returns the paths of all removable block devices."""
 	devices = get_block_devices_json()
 	removable = []
 
@@ -39,9 +39,9 @@ def get_removable_devices():
 		if not device.get('children'):
 			continue # skip if no partitions
 
-		# return device path
-		return f"/dev/{device['name']}"
+		removable.append(f"/dev/{device['name']}")
 
+	return removable
 
 
 def get_partitions(device_path, return_largest=False):
@@ -162,34 +162,82 @@ def move_files(mount_points, destination):
 	return moved_files
 
 
-def copy_testmedia(mount_point):
-	""" Copy media to mount point for testing. """
-	for i in os.listdir("testmedia"):
-		src = os.path.join("testmedia", i)
-		dst = os.path.join(mount_point, i)
-		if os.path.isdir(src):
-			shutil.copytree(src, dst, dirs_exist_ok=True)
-		else:
-			shutil.copy2(src, dst)
 
+
+def _testmedia_source_path() -> Path:
+	"""Return the absolute path to the repo's testmedia directory."""
+	return Path(__file__).resolve().parents[1] / "testmedia"
+
+
+def copy_testmedia(mount_point):
+	"""Copy test media to a removable device."""
+	source = _testmedia_source_path()
+	if not source.exists():
+		raise FileNotFoundError(f"Testmedia folder not found: {source}")
+
+	for item in source.iterdir():
+		dst = Path(mount_point) / item.name
+		if item.is_dir():
+			shutil.copytree(item, dst, dirs_exist_ok=True)
+		else:
+			shutil.copy2(item, dst)
+
+
+def copy_testmedia_to_removable_devices():
+	"""Copy test media to all removable devices."""
+	device_paths = get_removable_devices()
+	logger.info(f"Found removable devices for testmedia copy: {device_paths}")
+
+	if not device_paths:
+		raise RuntimeError("No removable devices found")
+
+	source = _testmedia_source_path()
+	if not source.exists():
+		raise FileNotFoundError(f"Testmedia folder not found: {source}")
+
+	results = {}
+	for device_path in device_paths:
+		partitions = get_partitions(device_path)
+		logger.info(f"Found partitions for {device_path}: {partitions}")
+
+		mount_points = mount_all_partitions(device_path)
+		logger.info(f"Mount points for {device_path}: {mount_points}")
+
+		copied = []
+		for mount_point in mount_points:
+			for item in source.iterdir():
+				dst = Path(mount_point) / item.name
+				if item.is_dir():
+					shutil.copytree(item, dst, dirs_exist_ok=True)
+				else:
+					shutil.copy2(item, dst)
+			copied.append(str(mount_point))
+
+		results[device_path] = copied
+
+	logger.info(f"Copied testmedia to removable devices: {results}")
+	return results
 
 
 def offload_to(dst):
 	"""Move all files from all removable devices to `dst`.
 	Returns a list of the absolute destination paths.
 	"""
-	device_path = get_removable_devices()
-	logger.info(f"Found removable device: {device_path}")
+	device_paths = get_removable_devices()
+	logger.info(f"Found removable devices: {device_paths}")
 
-	if not device_path:
+	if not device_paths:
 		raise RuntimeError("No removable devices found")
 
-	partitions = get_partitions(device_path)
-	logger.info(f"Found partitions: {partitions}")
+	moved = []
+	for device_path in device_paths:
+		partitions = get_partitions(device_path)
+		logger.info(f"Found partitions for {device_path}: {partitions}")
 
-	mount_points = mount_all_partitions(device_path)
-	logger.info(f"Mount points: {mount_points}")
+		mount_points = mount_all_partitions(device_path)
+		logger.info(f"Mount points for {device_path}: {mount_points}")
 
-	moved = move_files(mount_points, dst)
-	logger.info(f"Moved {len(moved)} files to: {moved}")
+		moved.extend(move_files(mount_points, dst))
+
+	logger.info(f"Moved {len(moved)} files to: {dst}")
 	return moved

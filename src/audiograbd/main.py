@@ -174,6 +174,8 @@ if __name__ == "__main__":
 		except KeyboardInterrupt:
 			logger.info("Stopping web server...")
 
+	exit(0)
+
 	logger.info("Uploading files...")
 	storage = config.get('storage', {})
 	provider = storage.get('provider')
