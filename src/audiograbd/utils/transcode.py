@@ -1,5 +1,8 @@
 import subprocess
+import logging
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 """
@@ -130,7 +133,12 @@ def transcode(path: Path, config, debug=False) -> Path:
 	if path.is_dir():
 		for file_path in path.rglob("*"):
 			if file_path.is_file():
-				transcode(file_path, config, debug=debug)
+				try:
+					transcode(file_path, config, debug=debug)
+				except Exception as e:
+					logger.warning(f"Skipping corrupted/unrecognised file {file_path}: {e}")
+					"""TODO: decide to skip or delete the file"""
+					# path.unlink(missing_ok=True)
 		return path
 
 	if not config["transcoding"]["enabled"]:
@@ -150,6 +158,12 @@ def transcode(path: Path, config, debug=False) -> Path:
 	if not handler:
 		raise ValueError(f"unsupported codec: {codec}")
 
-	return handler(path, config["transcoding"]["audio"], debug=debug)
+	try:
+		return handler(path, config["transcoding"]["audio"], debug=debug)
+	except Exception as e:
+		logger.warning(f"Skipping corrupted/unrecognised file {path}: {e}")
+		"""TODO: decide to skip or delete the file"""
+		# path.unlink(missing_ok=True)
+		return path
 
 
