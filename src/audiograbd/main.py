@@ -152,7 +152,7 @@ if __name__ == "__main__":
 	if detect_speech.get("enabled", False):
 		logger.info("Speech detection enabled")
 		try:
-			results = mute(data_dir, debug=config.get("debug", False))
+			results = mute(data_dir, margin_sec=0.25,debug=config.get("debug", False))
 			for path, timestamps in results.items():
 				logger.info(f"{path}: {len(timestamps)} speech segment(s)")
 		except Exception as e:
