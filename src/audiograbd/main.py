@@ -213,7 +213,7 @@ if __name__ == "__main__":
 		if interval is None or interval < 0:
 			logger.warning(f"Invalid wake interval ({interval})")
 		else:
-			logger.info(f"Next wake alarm scheduled in {interval} minutes")
+			logger.info(f"Next wake alarm scheduled in {interval} minute(s)")
 			set_wakealarm(interval)
 
 	
