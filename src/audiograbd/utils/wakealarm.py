@@ -38,7 +38,7 @@ def set_wakealarm(minutes: int) -> None:
 		logger.warning(f"Invalid wake interval ({minutes}), skipping wake alarm")
 		return
 	output = subprocess.run(
-		["pkexec", "usr/local/bin/wakealarm", str(minutes*60)],
+		["pkexec", "/usr/local/bin/wakealarm.sh", str(minutes*60)],
 		capture_output=True,
 		text=True
 	)
