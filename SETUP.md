@@ -54,6 +54,8 @@ Add the following lines to `/usr/share/polkit-1/actions/org.audiograbd.wakealarm
   <action id="org.audiograbd.wakealarm">
     <description>Set RTC wake alarm</description>
     <message>Set RTC wake alarm</message>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/local/bin/wakealarm.sh</annotate>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">false</annotate>
     <defaults>
       <allow_any>no</allow_any>
       <allow_inactive>no</allow_inactive>
