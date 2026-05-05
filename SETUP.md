@@ -87,8 +87,8 @@ sudo usermod -aG kmem "user"
 ## Wakealarm helper
 Set permissions:
 ```
-sudo chmod 755 /usr/local/bin/wakealarm
-chown root:root /usr/local/bin/wakealarm
+sudo chmod 755 /usr/local/bin/wakealarm.sh
+chown root:root /usr/local/bin/wakealarm.sh
 ```
 
 
