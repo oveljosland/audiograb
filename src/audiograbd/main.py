@@ -146,7 +146,10 @@ if __name__ == "__main__":
 	
 
 	# put test media on all connected removable devices
-	copy_testmedia_to_removable_devices()
+	try:
+		copy_testmedia_to_removable_devices()
+	except: 
+		print("no copy media")
 
 	try:
 		logger.info(f"Offloading data from all removable devices...")
@@ -202,7 +205,6 @@ if __name__ == "__main__":
 		except KeyboardInterrupt:
 			logger.info("Stopping web server...")
 
-	exit(0)
 
 	logger.info("Uploading files...")
 	storage = config.get('storage', {})
@@ -220,9 +222,13 @@ if __name__ == "__main__":
 		username = storage.get('sigma2', {}).get('username')
 		port = storage.get('sigma2', {}).get('port')
 		sigma2 = Sigma2Provider()
+		logger.info(f"sendign file to nird")
+		sigma2.upload("/home/dev/Documents/test_file.txt", str(username), port)
+		logger.info(f"sending file to nird success")
 	else:
 		logger.warning("No valid storage provider configured, skipping upload")
 
+	exit(0)
 	
 	
 	logger.info("Scheduling next alarm...")

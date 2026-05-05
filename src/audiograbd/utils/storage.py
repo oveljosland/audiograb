@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from google.cloud.storage import Client, transfer_manager
+#from google.cloud.storage import Client, transfer_manager
 import subprocess
 import logging
 
@@ -58,15 +58,37 @@ class GCSProvider(StorageProvider):
 
 class Sigma2Provider(StorageProvider):
 	#need correct file path and correct credentials
-	def __init__(self, cred_path="/home/jonas/folder/NIRD_credentials/ove_creds.txt"): 
+	def __init__(self, cred_path="/home/dev/Documents/ove_creds.txt"): 
 		self.cred_path = cred_path #given that file is formated username,password
 		self.credentials = open(cred_path, "r").read().split(",") 
 
-	def upload(self, source_directory, username, port=12 ):
-		output = subprocess.run(["scp", "-P", str(port), source_directory,
-		username + "@login.nird.sigma2.no:folder/"], check=True, capture_output=True) #use -P12 port 12 to avoid firewall at nird (or something)
-		if output.returncode != 0:
-			#print("Failed to upload to NIRD. SSH ERROR:", output.returncode)
-			logger.error(f"Failed to upload to NIRD. SSH ERROR: {output.returncode}")
-		else:
+	def upload(self, source_path, username, port=12):
+		remote = f"{username}@login.nird.sigma2.no:~/folder"
+
+		cmd = [
+        	"scp",
+        	"-P", str(port),
+        	"-i", "/home/dev/.ssh/id_ed25519",   # optional but recommended
+        	source_path,
+        	remote
+    	]
+		try:
+			result = subprocess.run(
+            	cmd,
+            	capture_output=True,
+            	text=True,
+            	check=True
+        	)
+
 			logger.info("Successfully uploaded to NIRD.")
+			logger.debug(f"SCP stdout: {result.stdout}")
+			logger.debug(f"SCP stderr: {result.stderr}")
+
+		except subprocess.CalledProcessError as e:
+			logger.error("Failed to upload to NIRD.")
+			logger.error(f"Return code: {e.returncode}")
+			logger.error(f"STDOUT: {e.stdout}")
+			logger.error(f"STDERR: {e.stderr}")
+
+        # Optional: re-raise if you want the program to stop
+        	

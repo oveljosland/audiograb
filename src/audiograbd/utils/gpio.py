@@ -22,9 +22,10 @@ def wait_for_quiet_SD_lines():
     returns 1 if no activity, returns 0 if timeout is reached
  	"""
   
-	timeout = subprocess.run(["/home/jonas/folder/audiograb/src/pinctl/pinread"], capture_output=True)
+	timeout = subprocessa.run(["/home/Documents/audiograb/src/pinctl/pinread"], capture_output=True)
  
 	logger.debug(f"Timeout while waiting for quiet SD-bus: {timeout}")
+	return timeout
 
 def init_sd_interface_pins():
 	"""
@@ -57,5 +58,5 @@ def change_sd_host_to_ext():
 	sd = SD_interface()
 	sd.R_EN_SWITCH_pin.blink(on_time = 0.1,off_time = 1, n= 1, background = False) # off time is 1 s to allow for sd card to shut down before switch
 	sd.R_SWITCH_pin.blink(on_time=0.1, off_time=0.1, n=1, background = False) #set switch to connect to external
-	sd.S_EN_SWITCH_pin.blink(on_time=0.1,off_time=0, background=False) # turn on switch outputs
+	sd.S_EN_SWITCH_pin.blink(on_time=0.1,off_time=0, n=1, background=False) # turn on switch outputs
 
