@@ -23,6 +23,7 @@ from audiograbd.utils.config import load_config, load_backup
 from audiograbd.utils.storage import GCSProvider, Sigma2Provider
 from audiograbd.models.speech import mute
 from audiograbd.utils.gpio import change_sd_host_to_cm, change_sd_host_to_ext, init_sd_interface_pins
+from audiograbd.models.silero import mute
 
 
 logger = logging.getLogger(__name__)
@@ -111,8 +112,8 @@ if __name__ == "__main__":
 		data_dir = upload_dir / "data"
 		logs_dir = upload_dir / "logs"
 
-		logfile = logs_dir / f"{project_name}.log"
-		configure_logging(config, log_file=logfile)
+		log_file = logs_dir / f"{project_name}.log"
+		configure_logging(config, log_file=log_file)
 	except RuntimeError as e:
 		logger.error(f"Failed to load any config file: {e}")
 		if config.get('scheduler', {}).get('enabled', False):
@@ -183,7 +184,7 @@ if __name__ == "__main__":
 	if detect_speech.get("enabled", False):
 		logger.info("Speech detection enabled")
 		try:
-			results = mute(data_dir, debug=config.get("debug", False))
+			results = mute(data_dir, margin_sec=0.25,debug=config.get("debug", False))
 			for path, timestamps in results.items():
 				logger.info(f"{path}: {len(timestamps)} speech segment(s)")
 		except Exception as e:

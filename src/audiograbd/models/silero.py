@@ -32,28 +32,31 @@ def get_timestamps(path, model=None):
 
 
 
-def build_mute_filter(timestamps):
-	"""Build the FFmpeg enable expression for muting the speech segments."""
+def build_mute_filter(timestamps, margin_sec=None):
+	"""Build the FFmpeg enable expression for muting the speech segments.
+	Optionally add a margin before and after each segment."""
 	if not timestamps:
 		return None
 
 	expressions = []
+	margin = margin_sec if margin_sec is not None else 0.0
+
 	for segment in timestamps:
-		start = float(segment["start"])
-		end = float(segment["end"])
+		start = float(segment["start"] - margin)
+		end = float(segment["end"] + margin)
 		expressions.append(f"between(t,{start:.3f},{end:.3f})")
 	return "+".join(expressions)
 
 
 
-def mute_speech_segments(path, timestamps, debug=False):
+def mute_speech_segments(path, timestamps, margin_sec=None, debug=False):
 	"""Mute speech segments using FFmpeg."""
 	path = Path(path)
 
 	if not timestamps:
 		return path
 
-	expression = build_mute_filter(timestamps)
+	expression = build_mute_filter(timestamps, margin_sec=margin_sec)
 	if not expression:
 		return path
 
@@ -82,7 +85,7 @@ def mute_speech_segments(path, timestamps, debug=False):
 
 
 
-def mute(path, model=None, debug=False):
+def mute(path, model=None, margin_sec=None, debug=False):
 	"""Detect speech segments in audio files and mute them."""
 	path = Path(path)
 	if model is None:
@@ -96,7 +99,7 @@ def mute(path, model=None, debug=False):
 			try:
 				timestamps = get_timestamps(file_path, model=model)
 				if timestamps:
-					mute_speech_segments(file_path, timestamps, debug=debug)
+					mute_speech_segments(file_path, timestamps, margin_sec=margin_sec, debug=debug)
 				results[str(file_path)] = timestamps
 			except Exception as e:
 				logger.warning(f"Skipping corrupted/unrecognised file {file_path}: {e}")
@@ -107,7 +110,7 @@ def mute(path, model=None, debug=False):
 	try:
 		timestamps = get_timestamps(path, model=model)
 		if timestamps:
-			mute_speech_segments(path, timestamps, debug=debug)
+			mute_speech_segments(path, timestamps, margin_sec=margin_sec, debug=debug)
 		return timestamps
 	except Exception as e:
 		logger.warning(f"Skipping corrupted/unrecognised file {path}: {e}")
