@@ -213,15 +213,17 @@ if __name__ == "__main__":
 		if interval is None or interval < 0:
 			logger.warning(f"Invalid wake interval ({interval})")
 		else:
+			logger.info(f"Total running time: {time.time() - start_time:.2f} seconds")
 			logger.info(f"Next wake alarm scheduled in {interval} minute(s)")
 			set_wakealarm(interval)
 
+			# time to die
+			logger.info("Halting...")
+			halt()
+			exit(0)
+
 	
-	logger.info(f"Total uptime: {time.time() - start_time:.2f} seconds")
-	
-	# time to die
-	logger.info("Halting...")
-	halt()
+	logger.info(f"Total running time: {time.time() - start_time:.2f} seconds")
 	exit(0)
 
 
