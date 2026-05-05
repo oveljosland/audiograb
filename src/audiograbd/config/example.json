@@ -19,9 +19,7 @@
 	},
 
 	"birdnet-prediction": {
-		"enabled": false,
-		"threshold": 0.1,
-		"species_filter_file": null
+		"enabled": false
 	},
 
 	"storage": {
