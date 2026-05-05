@@ -33,7 +33,7 @@
 	},
 
 	"scheduler": {
-		"enabled":true,
+		"enabled":false,
 		"interval_minutes": 1
 	},
 
