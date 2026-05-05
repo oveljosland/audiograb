@@ -3,10 +3,10 @@
 	"date_time_format": "%Y%m%d-%H%M%S",
 
 	"transcoding": {
-		"enabled": false,
+		"enabled": true,
 
 		"audio": {
-			"codec": "opus",
+			"codec": "flac",
 			"bitrate_kbps": 24,
 			"sample_rate": 16000
 		},
