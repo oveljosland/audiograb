@@ -14,7 +14,7 @@
 		"skip_already_compressed": true
 	},
 
-	"speech-detection": {
+	"speech-removal": {
 		"enabled": true
 	},
 
@@ -25,7 +25,7 @@
 	},
 
 	"storage": {
-		"provider": "sigma2",
+		"provider": "",
 		"sigma2": {
 			"port": "12",
 			"username": "ove"
@@ -33,8 +33,8 @@
 	},
 
 	"scheduler": {
-		"enabled": false,
-		"interval_minutes": 5
+		"enabled":true,
+		"interval_minutes": 1
 	},
 
 	"logger": {
