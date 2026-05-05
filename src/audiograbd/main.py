@@ -22,6 +22,7 @@ from audiograbd.utils.transcode import transcode
 from audiograbd.utils.config import load_config, load_backup
 from audiograbd.utils.storage import GCSProvider, Sigma2Provider
 from audiograbd.models.speech import mute
+from audiograbd.utils.gpio import change_sd_host_to_cm, change_sd_host_to_ext, init_sd_interface_pins
 
 
 logger = logging.getLogger(__name__)
@@ -120,7 +121,27 @@ if __name__ == "__main__":
 		halt()
 
 
-	
+	#initialise gpio
+
+	try:
+		logger.info(f"initialising pins ")
+		init_sd_interface_pins()
+	except:
+		logger.error(f"pins not initialized, possibly bad pin factory")
+
+	#wait for quiet sd lines
+	try:
+		logger.info(f"waiting for quiet sd lines")
+
+		if(wait_for_quiet_SD_lines()):
+			change_sd_host_to_cm()
+			logger.info(f"changes sd mux to CM")
+		else:
+			logger.info(f"timeout reached for waiting for quiet sd lines")
+	except:
+		logger.error(f"waiting for quiet sd lines failed")
+
+
 	
 	
 
@@ -132,6 +153,13 @@ if __name__ == "__main__":
 		moved = offload_to(data_dir)
 	except RuntimeError as e:
 		logger.error(f"Failed to offload to {upload_dir}: {e}")
+
+
+	try:
+		change_sd_host_to_ext()
+		logger.info(f"changed sd host to ext")
+	except:
+		logger.error(f"failed to change sd host to external")
 
 
 	birdnet_prediction = config.get("birdnet-prediction", {})
