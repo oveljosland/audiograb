@@ -2,6 +2,6 @@ requests
 google-cloud-storage
 silero-vad
 gpiozero
-birdnetlib
+#birdnetlib
 torchcodec
 torchaudio<2.9
