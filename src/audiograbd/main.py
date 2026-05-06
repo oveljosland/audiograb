@@ -154,20 +154,15 @@ if __name__ == "__main__":
 
 	try:
 		logger.info(f"Offloading data from all removable devices...")
+		offload_start = time.time()
 		moved = offload_to(data_dir)
+		logger.info(f"Offloaded {moved} files in {time.time() - offload_start:.2f} seconds")
 	except RuntimeError as e:
 		logger.error(f"Failed to offload to {upload_dir}: {e}")
 
 
-	try:
-		change_sd_host_to_ext()
-		logger.info(f"changed sd host to ext")
-	except:
-		logger.error(f"failed to change sd host to external")
-
-
-	birdnet_prediction = config.get("birdnet-prediction", {})
-	if birdnet_prediction.get("enabled", False):
+	birdnet = config.get("birdnet-prediction", {})
+	if birdnet.get("enabled", False):
 		logger.info("BirdNET prediction enabled")
 		try:
 			pass
@@ -180,11 +175,13 @@ if __name__ == "__main__":
 		logger.info("BirdNET prediction disabled")
 	
 
-	detect_speech = config.get("speech-detection", {})
-	if detect_speech.get("enabled", False):
-		logger.info("Speech detection enabled")
+	silero = config.get("speech-removal", {})
+	if silero.get("enabled", False):
+		logger.info("Speech removal enabled")
+		silero_start = time.time()
 		try:
 			results = mute(data_dir, margin_sec=0.25,debug=config.get("debug", False))
+			logger.info(f"Speech removal completed in {time.time() - silero_start:.2f} seconds")
 			for path, timestamps in results.items():
 				logger.info(f"{path}: {len(timestamps)} speech segment(s)")
 		except Exception as e:
@@ -192,8 +189,11 @@ if __name__ == "__main__":
 	else:
 		logger.info("Speech detection disabled")
 	
+	
 	logger.info("Transcoding files...")
+	transcode_start = time.time()
 	transcode(data_dir, config)
+	logger.info(f"Transcoding completed in {time.time() - transcode_start:.2f} seconds")
 	
 
 	if args.serve_port:
@@ -210,6 +210,9 @@ if __name__ == "__main__":
 	logger.info("Uploading files...")
 	storage = config.get('storage', {})
 	provider = storage.get('provider')
+
+	upload_start = time.time()
+	
 	if provider == "gcs":
 		gcs_config = storage.get('gcs', {})
 		bucket_name = gcs_config.get('bucket_name')
@@ -229,25 +232,25 @@ if __name__ == "__main__":
 	else:
 		logger.warning("No valid storage provider configured, skipping upload")
 
-	exit(0)
+	logger.info(f"Upload completed in {time.time() - upload_start:.2f} seconds")
 	
-	
-	logger.info("Scheduling next alarm...")
 	scheduler = config.get('scheduler', {})
 	if scheduler.get('enabled'):
 		interval = scheduler.get('interval_minutes')
 		if interval is None or interval < 0:
 			logger.warning(f"Invalid wake interval ({interval})")
 		else:
-			logger.info(f"Next wake alarm scheduled in {interval} minutes")
+			logger.info(f"Total running time: {time.time() - start_time:.2f} seconds")
+			logger.info(f"Next wake alarm scheduled in {interval} minute(s)")
 			set_wakealarm(interval)
 
+			# time to die
+			logger.info("Halting...")
+			halt()
+			exit(0)
+
 	
-	logger.info(f"Uptime: {time.time() - start_time:.2f} seconds")
-	
-	# time to die
-	logger.info("Halting...")
-	halt()
+	logger.info(f"Total running time: {time.time() - start_time:.2f} seconds")
 	exit(0)
 
 

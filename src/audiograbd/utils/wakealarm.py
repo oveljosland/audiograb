@@ -1,3 +1,4 @@
+import os
 import subprocess
 import logging
 
@@ -9,14 +10,17 @@ KERNEL_INFO_RTC = '/proc/driver/rtc'
 
 def alarm_irq_enabled() -> bool:
 	"""Returns True if the RTC IRQ alarm is set."""
-	output = subprocess.run([
-		"grep", "alarm_IRQ", KERNEL_INFO_RTC
-		],
+	output = subprocess.run(
+		["grep", "alarm_IRQ", KERNEL_INFO_RTC],
 		capture_output=True,
 		text=True
 	)
-	output = output.stdout.split(":")[1].strip()
-	return True if output == "yes" else False
+	if output.returncode != 0:
+		return False
+	parts = output.stdout.split(":", 1)
+	if len(parts) != 2:
+		return False
+	return parts[1].strip() == "yes"
 
 
 
@@ -34,16 +38,26 @@ def print_kernel_info() -> None:
 
 def set_wakealarm(minutes: int) -> None:
 	"""Set next wake alarm in minutes."""
-	if minutes < 0 or minutes is None:
+	if minutes is None or minutes < 0:
 		logger.warning(f"Invalid wake interval ({minutes}), skipping wake alarm")
 		return
+	interval = "0" if minutes == 0 else f"+{minutes * 60}"
+	cmd = ["/usr/local/bin/wakealarm.sh", interval]
+	if os.geteuid() != 0:
+		cmd.insert(0, "pkexec")
+	logger.debug(f"Setting wake alarm with: {cmd}")
 	output = subprocess.run(
-		["pkexec", "usr/local/bin/wakealarm", str(minutes*60)],
+		cmd,
 		capture_output=True,
 		text=True
 	)
+	stdout = output.stdout.strip()
+	stderr = output.stderr.strip()
 	if output.returncode != 0 or not alarm_irq_enabled():
-		raise RuntimeError(f"Failed to set wake alarm: {output.stderr}")
+		raise RuntimeError(
+			f"Failed to set wake alarm (returncode={output.returncode}). "
+			f"cmd={cmd!r}, stdout={stdout!r}, stderr={stderr!r}"
+		)
 
 
 
