@@ -4,7 +4,7 @@ The Audiograb is an embedded wireless wildlife monitoring system, currently in d
 ## Quick Start
 Install packages:
 ```
-sudo apt install git ffmpeg pkexec -y
+sudo apt install git ffmpeg pkexec screen modemmanager libqmi-utils -y
 ```
 Clone the repo:
 ```
