@@ -125,7 +125,7 @@ if __name__ == "__main__":
 	
 
 	# put test media on all connected removable devices
-	copy_testmedia_to_removable_devices()
+	#copy_testmedia_to_removable_devices()
 
 	try:
 		logger.info(f"Offloading data from all removable devices...")
@@ -196,12 +196,15 @@ if __name__ == "__main__":
 			logger.error("GCS bucket name missing from config")
 		else:
 			gcs = GCSProvider(bucket_name)
-			gcs.upload(upload_dir)
+			gcs.upload("testmedia")
 	
 	elif provider == "sigma2":
 		username = storage.get('sigma2', {}).get('username')
 		port = storage.get('sigma2', {}).get('port')
 		sigma2 = Sigma2Provider()
+		output = subprocess.run(["scp", "-P", "12", "-r", "/home/dev/Documents/audiograb/src/audiograbd/testmedia",
+		"ove@login.nird.sigma2.no:folder"], check=True, capture_output=True)
+		#sigma2.upload("testmedia", "ove")
 	else:
 		logger.warning("No valid storage provider configured, skipping upload")
 

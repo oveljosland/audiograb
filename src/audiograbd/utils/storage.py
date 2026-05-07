@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from google.cloud.storage import Client, transfer_manager
+#from google.cloud.storage import Client, transfer_manager
 import subprocess
 import logging
 
@@ -58,7 +58,7 @@ class GCSProvider(StorageProvider):
 
 class Sigma2Provider(StorageProvider):
 	#need correct file path and correct credentials
-	def __init__(self, cred_path="/home/jonas/folder/NIRD_credentials/ove_creds.txt"): 
+	def __init__(self, cred_path="/home/dev/Documents/ove_creds.txt"): 
 		self.cred_path = cred_path #given that file is formated username,password
 		self.credentials = open(cred_path, "r").read().split(",") 
 
