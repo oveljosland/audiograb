@@ -45,8 +45,8 @@ def change_sd_host_to_cm():
 	"""
 	sd = SD_interface()
 	sd.R_EN_SWITCH_pin.blink(on_time = 0.1,off_time = 1, n= 1, background = False) # off time is 1 s to allow for sd card to shut down before switch
-	sd.R_SWITCH_pin(on_time=0.1, off_time=0.1, n=1, background = False) #set switch to connect to cm
-	sd.S_EN_SWITCH_pin(on_time=0.1,off_time=0, background=False) # turn on switch outputs
+	sd.R_SWITCH_pin.blink(on_time=0.1, off_time=0.1, n=1, background = False) #set switch to connect to cm
+	sd.S_EN_SWITCH_pin.blink(on_time=0.1,off_time=0, n=1, background=False) # turn on switch outputs
 
 
 def change_sd_host_to_ext():
@@ -56,6 +56,14 @@ def change_sd_host_to_ext():
 	"""
 	sd = SD_interface()
 	sd.R_EN_SWITCH_pin.blink(on_time = 0.1,off_time = 1, n= 1, background = False) # off time is 1 s to allow for sd card to shut down before switch
-	sd.S_SWITCH_pin(on_time=0.1, off_time=0.1, n=1, background = False) #set switch to connect to cm
-	sd.S_EN_SWITCH_pin(on_time=0.1,off_time=0, background=False) # turn on switch outputs
+	sd.S_SWITCH_pin.blink(on_time=0.1, off_time=0.1, n=1, background = False) #set switch to connect to cm
+	sd.S_EN_SWITCH_pin.blink(on_time=0.1,off_time=0, n=1, background=False) # turn on switch outputs
+
+def turn_of_audiomoth():
+	sd = SD_interface()
+	sd.R_EN_VOUT_pin.blink(on_time = 0.1, off_time = 0, n= 1, background = False) #Turn of Audiomoth power
+
+def turn_on_audiomoth():
+	sd = SD_interface()
+	sd.S_EN_VOUT_pin.blink(on_time = 0.1, off_time = 0, n= 1, background = False) #enable output voltage
 
