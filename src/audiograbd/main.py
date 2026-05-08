@@ -9,8 +9,6 @@ import uuid
 import subprocess
 import logging
 import argparse
-import http.server
-import socketserver
 import threading
 
 from pathlib import Path
@@ -21,7 +19,8 @@ from audiograbd.utils.device import offload_to, copy_testmedia_to_removable_devi
 from audiograbd.utils.transcode import transcode
 from audiograbd.utils.config import load_config, load_backup
 from audiograbd.utils.storage import GCSProvider, Sigma2Provider
-from audiograbd.models.silero import mute
+from audiograbd.models.silero import detect_and_mute
+from audiograbd.utils.server import serve
 
 
 logger = logging.getLogger(__name__)
@@ -48,31 +47,15 @@ def halt():
 		logger.error(f"failed to halt: {e}")
 
 
-def serve_directory(directory, port):
-	"""Start a simple HTTP server for the given directory.
-	Runs in a background thread.
-	"""
-	directory = Path(directory)
-	if not directory.exists():
-		logger.warning(f"Directory does not exist: {directory}")
-		return
-
-	os.chdir(directory)
-	handler = http.server.SimpleHTTPRequestHandler
-	
-	try:
-		with socketserver.TCPServer(("", port), handler) as httpd:
-			logger.info(f"Web server running on http://localhost:{port}")
-			logger.info(f"Serving files from: {directory}")
-			httpd.serve_forever()
-	except Exception as e:
-		logger.error(f"Failed to start web server: {e}")
 
 
-def create_upload_directory(config, project_name):
-	"""Create upload directory in `/tmp` with a timestamp and UUID.
+
+def create_upload_directory(config):
+	"""Create upload directory in `/tmp` with a project name,
+	timestamp and UUID.
 	On Raspberry Pi OS, `/tmp` is a `tmpfs`, which means it will be erased when shutting down.
 	"""
+	project_name = config.get('project_name', 'audiograb')
 	timestamp = time.strftime(config.get('date_time_format', "%Y%m%d-%H%M%S"))
 	uid = str(uuid.uuid4())[:8]
 
@@ -92,7 +75,7 @@ def create_upload_directory(config, project_name):
 if __name__ == "__main__": 
 	parser = argparse.ArgumentParser(description="audiograbd - extract, process, and upload audio from embedded wildlife recorders")
 	parser.add_argument('--serve-port', type=int, default=None, 
-		help="Start a web server on this port to browse processed files")
+		help="Start a web server to browse processed files")
 	args = parser.parse_args()
 
 	start_time = time.time()
@@ -104,9 +87,9 @@ if __name__ == "__main__":
 		config = load_backup()
 
 		# set project name, e.g. place of deployment
-		project_name = config.get('project_name', 'audiograb')
+		project_name = 
 
-		upload_dir = create_upload_directory(config, project_name)
+		upload_dir = create_upload_directory(config)
 		data_dir = upload_dir / "data"
 		logs_dir = upload_dir / "logs"
 
@@ -155,7 +138,7 @@ if __name__ == "__main__":
 		logger.info("Speech removal enabled")
 		silero_start = time.time()
 		try:
-			results = mute(data_dir, margin_sec=0.25,debug=config.get("debug", False))
+			results = mute(data_dir)
 			logger.info(f"Speech removal completed in {time.time() - silero_start:.2f} seconds")
 			for path, timestamps in results.items():
 				logger.info(f"{path}: {len(timestamps)} speech segment(s)")
@@ -170,10 +153,14 @@ if __name__ == "__main__":
 	transcode(data_dir, config)
 	logger.info(f"Transcoding completed in {time.time() - transcode_start:.2f} seconds")
 	
-
+	
+	# start web server if audiograbd was run with --serve-port <port> 
 	if args.serve_port:
 		logger.info(f"Starting web server on port {args.serve_port}...")
-		server_thread = threading.Thread(target=serve_directory, args=(upload_dir, args.serve_port), daemon=True)
+		server_thread = threading.Thread(
+			target=serve, args=(upload_dir, args.serve_port),
+			daemon=True
+		)
 		server_thread.start()
 		try:
 			while True:
