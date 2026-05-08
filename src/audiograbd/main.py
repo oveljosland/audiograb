@@ -55,8 +55,7 @@ def create_upload_dir(config):
 	timestamp and UUID. The upload dir is not peristent."""
 	name = config.get('project_name', 'audiograb')
 	date = time.strftime(config.get('date_time_format', "%Y%m%d-%H%M%S"))
-	uuid = str(uuid.uuid4())[:8]
-	base = Path("/tmp") / f"{name}-{date}-{uuid}"
+	base = Path("/tmp") / f"{name}-{date}-{str(uuid.uuid4())[:8]}"
 	(base / "data").mkdir(parents=True, exist_ok=True)
 	(base / "logs").mkdir(parents=True, exist_ok=True)
 	logger.info(f"Created upload directory at {base}")
@@ -106,7 +105,7 @@ if __name__ == "__main__":
 		logger.info(f"Offloading data from all removable devices...")
 		offload_start = time.time()
 		moved = offload_to(data_dir)
-		logger.info(f"Offloaded {moved} files in {time.time() - offload_start:.2f} seconds")
+		logger.info(f"Offloaded {len(moved)} files in {time.time() - offload_start:.2f} seconds")
 	except RuntimeError as e:
 		logger.error(f"Failed to offload to {upload_dir}: {e}")
 
@@ -130,7 +129,7 @@ if __name__ == "__main__":
 		logger.info("Speech removal enabled")
 		silero_start = time.time()
 		try:
-			results = mute(data_dir)
+			results = detect_and_mute(data_dir)
 			logger.info(f"Speech removal completed in {time.time() - silero_start:.2f} seconds")
 			for path, timestamps in results.items():
 				logger.info(f"{path}: {len(timestamps)} speech segment(s)")
