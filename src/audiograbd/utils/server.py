@@ -22,8 +22,7 @@ def serve(dir, port):
 	
 	try:
 		with socketserver.TCPServer(("", port), handler) as httpd:
-			logger.info(f"Web server at http://localhost:{port}")
-			logger.info(f"Serving files from: {dir}")
+			logger.info(f"Serving {dir} at http://localhost:{port}")
 			httpd.serve_forever()
 	except Exception as e:
 		logger.error(f"Failed to start web server: {e}")
