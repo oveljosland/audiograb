@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 
-def get_timestamps(Path: path, model=None):
+def get_timestamps(path: Path, model=None):
 	"""Return speech timestamps for a file or directory."""
 	path = Path(path)
 
@@ -42,7 +42,7 @@ def expr_from_timestamp(timestamps) -> str:
 
 
 
-def mute_segments(Path: path, timestamps):
+def mute_segments(path: Path, timestamps):
 	"""Mute speech segments of a file or dir of files from timestamps."""
 	path = Path(path)
 
@@ -68,7 +68,7 @@ def mute_segments(Path: path, timestamps):
 
 
 
-def detect_and_mute(Path: path, model=None):
+def detect_and_mute(path: Path, model=None):
 	"""Detect speech segments in audio files and mute them."""
 	path = Path(path)
 	if model is None: # load model once
