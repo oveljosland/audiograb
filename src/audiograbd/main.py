@@ -127,32 +127,30 @@ if __name__ == "__main__":
 	silero = config.get("speech-removal", {})
 	if silero.get("enabled", False):
 		logger.info("Speech removal enabled")
-		silero_start = time.time()
+		start = time.time()
 		try:
 			results = detect_and_mute(data_dir)
-			logger.info(f"Speech removal completed in {time.time() - silero_start:.2f} seconds")
-			for path, timestamps in results.items():
-				logger.info(f"{path}: {len(timestamps)} speech segment(s)")
+			logger.info(f"Speech segments muted ({time.time() - start:.2f}s)")
+			for p, ts in results.items():
+				logger.info(f"{Path(p).name}: {len(ts)} speech segments")
 		except Exception as e:
 			logger.error(f"Speech detection failed: {e}")
 	else:
 		logger.info("Speech detection disabled")
 	
 	
-	logger.info("Transcoding files...")
-	transcode_start = time.time()
+	start = time.time()
 	transcode(data_dir, config)
-	logger.info(f"Transcoding completed in {time.time() - transcode_start:.2f} seconds")
+	logger.info(f"Transcoding completed ({time.time() - start:.2f}s)")
 	
 
 	# start web server if audiograbd was run with --serve-port <port> 
 	if args.serve_port:
-		logger.info(f"Starting web server on port {args.serve_port}...")
-		server_thread = threading.Thread(
+		server = threading.Thread(
 			target=serve, args=(upload_dir, args.serve_port),
 			daemon=True
 		)
-		server_thread.start()
+		server.start()
 		try:
 			while True:
 				time.sleep(1)
