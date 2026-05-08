@@ -24,6 +24,35 @@ def alarm_irq_enabled() -> bool:
 
 
 
+def set_wakealarm(minutes: int) -> None:
+	"""Set next wake alarm in minutes."""
+	if minutes is None or minutes < 0:
+		logger.warning(f"Invalid interval ({minutes}), skipping alarm...")
+		return
+	interval = "0" if minutes == 0 else f"+{minutes * 60}"
+	cmd = ["/usr/local/bin/wakealarm.sh", interval]
+	if os.geteuid() != 0:
+		cmd.insert(0, "pkexec")
+	logger.debug(f"Setting alarm with: {cmd}")
+	output = subprocess.run(
+		cmd,
+		capture_output=True,
+		text=True
+	)
+	if output.returncode != 0 or not alarm_irq_enabled():
+		raise RuntimeError(
+			f"Failed to set alarm, returned {output.returncode})"
+		)
+
+
+
+def disable_wakealarm() -> None:
+	"""Disable the wake alarm."""
+	set_wakealarm(0)
+
+
+
+# only used for debugging
 def print_kernel_info() -> None:
 	"""Print RTC kernel info."""
 	output = subprocess.run([
@@ -33,34 +62,3 @@ def print_kernel_info() -> None:
 		text=True
 	)
 	logger.debug(f"RTC kernel info: {output.stdout}")
-
-
-
-def set_wakealarm(minutes: int) -> None:
-	"""Set next wake alarm in minutes."""
-	if minutes is None or minutes < 0:
-		logger.warning(f"Invalid wake interval ({minutes}), skipping wake alarm")
-		return
-	interval = "0" if minutes == 0 else f"+{minutes * 60}"
-	cmd = ["/usr/local/bin/wakealarm.sh", interval]
-	if os.geteuid() != 0:
-		cmd.insert(0, "pkexec")
-	logger.debug(f"Setting wake alarm with: {cmd}")
-	output = subprocess.run(
-		cmd,
-		capture_output=True,
-		text=True
-	)
-	stdout = output.stdout.strip()
-	stderr = output.stderr.strip()
-	if output.returncode != 0 or not alarm_irq_enabled():
-		raise RuntimeError(
-			f"Failed to set wake alarm (returncode={output.returncode}). "
-			f"cmd={cmd!r}, stdout={stdout!r}, stderr={stderr!r}"
-		)
-
-
-
-def disable_wakealarm() -> None:
-	"""Disable the wake alarm."""
-	set_wakealarm(0)
