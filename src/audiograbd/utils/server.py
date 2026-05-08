@@ -1,7 +1,11 @@
 import os
+import logging
 import http.server
 import socketserver
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
+
 
 
 def serve(dir, port):
