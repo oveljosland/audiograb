@@ -1,7 +1,7 @@
 import os
 import json
 import logging
-from pathlib import Path # TODO: maybe use this for the other modules too ...
+from pathlib import Path
 
 try:
 	import requests
@@ -10,19 +10,10 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-
-
-CACHE_DIR = Path("~/.config/audiograb/").expanduser()
-
+CACHE_DIR = Path("~/.config/audiograbd/").expanduser()
 CACHED_CONFIG = CACHE_DIR / "config.json"
 REMOTE_CONFIG = "https://folk.ntnu.no/ovelj/config.json"
-BACKUP_CONFIG = "audiograbd/config/example.json" # double check this path
-
-
-
-def make_cache_dir():
-	"""Make the cache directory."""
-	CACHE_DIR.mkdir(parents=True, exist_ok=True)
+BACKUP_CONFIG = "audiograbd/config/example.json"
 
 
 
@@ -50,7 +41,7 @@ def download_config(url, timeout=10):
 def cache_config(config):
 	"""Cache the config file in `CACHE_DIR`."""
 	try:
-		make_cache_dir()
+		CACHE_DIR.mkdir(parents=True, exist_ok=True)
 		with open(CACHED_CONFIG, "w") as cache:
 			json.dump(config, cache, indent=4)
 		logger.info(f"Config cached to {CACHED_CONFIG}")
@@ -62,7 +53,7 @@ def cache_config(config):
 
 
 def load_cached():
-	"""Load the cached configuration file."""
+	"""Load the cached config file."""
 	if not CACHED_CONFIG.exists():
 		logger.warning(f"cached config not found: {CACHED_CONFIG}")
 		return None
@@ -79,7 +70,7 @@ def load_cached():
 
 
 def load_backup(path=BACKUP_CONFIG):
-	"""Load the backup configuration file included in this repository."""
+	"""Load the backup config file included in this repository."""
 	if not os.path.exists(path):
 		logger.warning(f"Backup config not found: {path}")
 		return None
@@ -103,15 +94,13 @@ def load_config(url=REMOTE_CONFIG, cache=True):
 	2. Cached
 	3. Backup
 	"""
-
-
-	logger.info(f"trying to download config from {url}")
+	logger.info(f"Trying to download config from {url}")
 	config = download_config(url)
 
 	if config is not None:
 		if cache:
 			cache_config(config)
-		logger.info("using remote config")
+		logger.info("Using remote config")
 		return config
 	
 	logger.warning("Failed to download config")

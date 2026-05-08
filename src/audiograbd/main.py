@@ -50,21 +50,15 @@ def halt():
 
 
 
-def create_upload_directory(config):
-	"""Create upload directory in `/tmp` with a project name,
-	timestamp and UUID.
-	On Raspberry Pi OS, `/tmp` is a `tmpfs`, which means it will be erased when shutting down.
-	"""
-	project_name = config.get('project_name', 'audiograb')
-	timestamp = time.strftime(config.get('date_time_format', "%Y%m%d-%H%M%S"))
-	uid = str(uuid.uuid4())[:8]
-
-	base = Path("/tmp") / f"{project_name}-{timestamp}-{uid}"
-
-	# create subdirectories
+def create_upload_dir(config):
+	"""Create upload dir in `/tmp` with a project name,
+	timestamp and UUID. The upload dir is not peristent."""
+	name = config.get('project_name', 'audiograb')
+	date = time.strftime(config.get('date_time_format', "%Y%m%d-%H%M%S"))
+	uuid = str(uuid.uuid4())[:8]
+	base = Path("/tmp") / f"{name}-{date}-{uuid}"
 	(base / "data").mkdir(parents=True, exist_ok=True)
-	(base / "logs" ).mkdir(parents=True, exist_ok=True)
-
+	(base / "logs").mkdir(parents=True, exist_ok=True)
 	logger.info(f"Created upload directory at {base}")
 	return base
 
@@ -72,37 +66,35 @@ def create_upload_directory(config):
 
 
 
-if __name__ == "__main__": 
+if __name__ == "__main__":
+
+	start_time = time.time()
+
 	parser = argparse.ArgumentParser(description="audiograbd - extract, process, and upload audio from embedded wildlife recorders")
 	parser.add_argument('--serve-port', type=int, default=None, 
 		help="Start a web server to browse processed files")
 	args = parser.parse_args()
 
-	start_time = time.time()
+	
 	logger.info("Loading config...")
 
 	try:
-		
 		#config = load_config()
 		config = load_backup()
-
-		# set project name, e.g. place of deployment
-		project_name = 
-
-		upload_dir = create_upload_directory(config)
-		data_dir = upload_dir / "data"
-		logs_dir = upload_dir / "logs"
-
-		log_file = logs_dir / f"{project_name}.log"
-		configure_logging(config, log_file=log_file)
+		
 	except RuntimeError as e:
-		logger.error(f"Failed to load any config file: {e}")
+		logger.error(f"Failed to load config: {e}")
 		if config.get('scheduler', {}).get('enabled', False):
 			logger.info(f"Waking up in 10 minutes to try again...")
 		set_wakealarm(10)
 		halt()
 
+	upload_dir = create_upload_dir(config)
+	data_dir = upload_dir / "data"
+	logs_dir = upload_dir / "logs"
 
+	project_name = config.get('project_name', 'audiograb')
+	configure_logging(config, file=logs_dir / f"{project_name}.log")
 	
 	
 	
@@ -153,7 +145,7 @@ if __name__ == "__main__":
 	transcode(data_dir, config)
 	logger.info(f"Transcoding completed in {time.time() - transcode_start:.2f} seconds")
 	
-	
+
 	# start web server if audiograbd was run with --serve-port <port> 
 	if args.serve_port:
 		logger.info(f"Starting web server on port {args.serve_port}...")
