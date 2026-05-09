@@ -22,6 +22,7 @@ from audiograbd.utils.transcode import transcode
 from audiograbd.utils.config import load_config, load_backup
 from audiograbd.utils.storage import GCSProvider, Sigma2Provider
 from audiograbd.models.silero import mute
+from audiograbd.utils.gpio import init_sd_interface_pins, change_sd_host_to_cm, change_sd_host_to_ext
 
 
 logger = logging.getLogger(__name__)
@@ -118,7 +119,8 @@ if __name__ == "__main__":
 			logger.info(f"Waking up in 10 minutes to try again...")
 		set_wakealarm(10)
 		halt()
-
+	init_sd_interface_pins() #set sd card to cm host and enable output voltage
+	logger.info("Initialized SD card for cm host")
 
 	
 	
@@ -209,6 +211,8 @@ if __name__ == "__main__":
 		logger.warning("No valid storage provider configured, skipping upload")
 
 	logger.info(f"Upload completed in {time.time() - upload_start:.2f} seconds")
+	change_sd_host_to_ext() #change sd card host to external device to continue recording
+	logger.info("Changed sd card host to external device")
 	
 	scheduler = config.get('scheduler', {})
 	if scheduler.get('enabled'):
