@@ -19,8 +19,9 @@ from audiograbd.utils.device import offload_to, copy_testmedia_to_removable_devi
 from audiograbd.utils.transcode import transcode
 from audiograbd.utils.config import load_config, load_backup
 from audiograbd.utils.storage import GCSProvider, Sigma2Provider
-from audiograbd.models.silero import detect_and_mute
+from audiograbd.utils.silero import detect_and_mute
 from audiograbd.utils.server import serve
+from audiograbd.utils.birdnet import birdnet_analyse
 
 
 logger = logging.getLogger(__name__)
@@ -110,16 +111,14 @@ if __name__ == "__main__":
 		logger.error(f"Failed to offload to {upload_dir}: {e}")
 
 
-	birdnet = config.get("birdnet-prediction", {})
+	birdnet = config.get("birdnet", {})
 	if birdnet.get("enabled", False):
-		logger.info("BirdNET prediction enabled")
+		logger.info("birdnet-analyzer enabled")
 		try:
-			pass
-			"""
-			TODO: implement BirdNET prediction.
-			"""
+			subprocess.run(["uv", "run", "birdnet-analyser"])
+
 		except Exception as e:
-			logger.error(f"BirdNET prediction failed: {e}")
+			logger.error(f"BirdNET failed: {e}")
 	else:
 		logger.info("BirdNET prediction disabled")
 	
@@ -140,6 +139,7 @@ if __name__ == "__main__":
 	
 	
 	start = time.time()
+	
 	transcode(data_dir, config)
 	logger.info(f"Transcoding completed ({time.time() - start:.2f}s)")
 	
@@ -159,7 +159,6 @@ if __name__ == "__main__":
 
 
 
-	logger.info("Uploading files...")
 	storage = config.get('storage', {})
 	provider = storage.get('provider')
 
@@ -181,7 +180,7 @@ if __name__ == "__main__":
 	else:
 		logger.warning("No valid storage provider configured, skipping upload")
 
-	logger.info(f"Upload completed in {time.time() - upload_start:.2f} seconds")
+	logger.info(f"Upload completed ({time.time() - upload_start:.2f}s)")
 	
 	scheduler = config.get('scheduler', {})
 	if scheduler.get('enabled'):
@@ -189,17 +188,17 @@ if __name__ == "__main__":
 		if interval is None or interval < 0:
 			logger.warning(f"Invalid wake interval ({interval})")
 		else:
-			logger.info(f"Total running time: {time.time() - start_time:.2f} seconds")
+			logger.info(f"Uptime: {time.time() - start_time:.2f} seconds")
 			logger.info(f"Next wake alarm scheduled in {interval} minute(s)")
 			set_wakealarm(interval)
 
 			# time to die
-			logger.info("Halting...")
-			halt()
+			logger.info(f"Halting (uptime {time.time() - start_time:.2f}s)")
+			#halt()
 			exit(0)
 
 	
-	logger.info(f"Total running time: {time.time() - start_time:.2f} seconds")
+	logger.info(f"Halting (uptime {time.time() - start_time:.2f}s)")
 	exit(0)
 
 
