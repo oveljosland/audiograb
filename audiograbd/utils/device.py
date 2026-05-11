@@ -44,13 +44,13 @@ def get_removable_devices():
 	return removable
 
 
-def get_partitions(device_path, return_largest=False):
+def get_partitions(path, return_largest=False):
 	"""Returns the partitions of the device.
 	Optionally return the largest partition.
 	"""
 	devices = get_block_devices_json()
 	for device in devices['blockdevices']:
-		if f"/dev/{device['name']}" == device_path:
+		if f"/dev/{device['name']}" == path:
 			partitions = device.get("children", [])
 			if return_largest and partitions:
 				largest = max(partitions, key=lambda p: p["size"])
@@ -60,10 +60,10 @@ def get_partitions(device_path, return_largest=False):
 
 
 
-def mount(device_path):
+def mount(path):
 	""" Mount the device, and return its mountpoint. """
 	output = subprocess.run([
-		"udisksctl", "mount", "-b", device_path
+		"udisksctl", "mount", "-b", path
 	],
 	capture_output=True,
 	text=True
@@ -73,21 +73,21 @@ def mount(device_path):
 		devices = get_block_devices_json()
 		for device in devices['blockdevices']:
 			for child in device.get('children', []):
-				if f"/dev/{child['name']}" == device_path:
+				if f"/dev/{child['name']}" == path:
 					mounts = child.get('mountpoints', [])
 					if mounts and mounts[0]:
 						return mounts[0]
 		# failed to find mount point
-		raise RuntimeError(f"failed to mount {device_path}: {output.stderr}")
+		raise RuntimeError(f"failed to mount {path}: {output.stderr}")
 	
 	return output.stdout.split()[-1]
 
 
 
-def unmount(device_path):
+def unmount(path):
 	""" Unmount the device. """
 	return subprocess.run([
-		"udisksctl", "unmount", "-b", device_path
+		"udisksctl", "unmount", "-b", path
 	],
 	capture_output=True,
 	text=True
@@ -95,9 +95,9 @@ def unmount(device_path):
 
 
 
-def mount_all_partitions(device_path):
-	""" Mount all the partitions of the device, return their mountpoints. """
-	partitions = get_partitions(device_path)
+def mount_all_partitions(path):
+	"""Mount all the partitions of the device, return their mountpoints."""
+	partitions = get_partitions(path)
 	mount_points = []
 	for partition in partitions:
 		mount_point = mount(partition)
@@ -106,25 +106,10 @@ def mount_all_partitions(device_path):
 
 
 
-def unmount_all_partitions(device_paths):
-	""" Unmount all partitions of the device. """
-	for device_path in device_paths:
-		unmount(device_path)
-
-
-
-def power_off(device_path):
-	""" Power off the device. """
-	# normalise, /dev/sda2 -> /dev/sda
-	device_path = re.sub(r"\d+$", "", device_path)
-
-	return subprocess.run([
-		"udisksctl", "power-off", "-b", device_path
-	],
-	capture_output=True,
-	text=True,
-	check=True,
-	).stdout
+def unmount_all_partitions(path):
+	"""Unmount all partitions of the device."""
+	for device in path:
+		unmount(device)
 
 
 
@@ -161,62 +146,6 @@ def move_files(mount_points, destination):
 
 	return moved_files
 
-
-
-
-def _testmedia_source_path() -> Path:
-	"""Return the absolute path to the repo's testmedia directory."""
-	return Path(__file__).resolve().parents[1] / "testmedia"
-
-
-def copy_testmedia(mount_point):
-	"""Copy test media to a removable device."""
-	source = _testmedia_source_path()
-	if not source.exists():
-		raise FileNotFoundError(f"Testmedia folder not found: {source}")
-
-	for item in source.iterdir():
-		dst = Path(mount_point) / item.name
-		if item.is_dir():
-			shutil.copytree(item, dst, dirs_exist_ok=True)
-		else:
-			shutil.copy2(item, dst)
-
-
-def copy_testmedia_to_removable_devices():
-	"""Copy test media to all removable devices."""
-	device_paths = get_removable_devices()
-	logger.info(f"Found removable devices for testmedia copy: {device_paths}")
-
-	if not device_paths:
-		raise RuntimeError("No removable devices found")
-
-	source = _testmedia_source_path()
-	if not source.exists():
-		raise FileNotFoundError(f"Testmedia folder not found: {source}")
-
-	results = {}
-	for device_path in device_paths:
-		partitions = get_partitions(device_path)
-		logger.info(f"Found partitions for {device_path}: {partitions}")
-
-		mount_points = mount_all_partitions(device_path)
-		logger.info(f"Mount points for {device_path}: {mount_points}")
-
-		copied = []
-		for mount_point in mount_points:
-			for item in source.iterdir():
-				dst = Path(mount_point) / item.name
-				if item.is_dir():
-					shutil.copytree(item, dst, dirs_exist_ok=True)
-				else:
-					shutil.copy2(item, dst)
-			copied.append(str(mount_point))
-
-		results[device_path] = copied
-
-	logger.info(f"Copied testmedia to removable devices: {results}")
-	return results
 
 
 def offload_to(dst):
