@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
+# not (!/usr/bin/env python3)
 
-# run from /src
 # python -m audiograbd.main
 
 import os
@@ -13,15 +12,15 @@ import threading
 
 from pathlib import Path
 
-from audiograbd.utils.logger import configure_logging
-from audiograbd.utils.wakealarm import set_wakealarm, disable_wakealarm
-from audiograbd.utils.device import transfer_from_all
-from audiograbd.utils.transcode import transcode
-from audiograbd.utils.config import load_config, load_backup
-from audiograbd.utils.storage import GCSProvider, Sigma2Provider
-from audiograbd.utils.silero import detect_and_mute
-from audiograbd.utils.server import serve
-from audiograbd.utils.birdnet import birdnet_analyse
+from utils.logger import configure_logging
+from utils.wakealarm import set_wakealarm, disable_wakealarm
+from utils.device import transfer_from_all
+from utils.transcode import transcode
+from utils.config import load_config, load_backup
+from utils.storage import GCSProvider, Sigma2Provider
+from utils.silero import detect_and_mute
+from utils.server import serve
+from utils.birdnet import birdnet_analyse
 
 
 logger = logging.getLogger(__name__)
