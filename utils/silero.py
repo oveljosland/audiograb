@@ -2,7 +2,7 @@ import subprocess
 import logging
 from pathlib import Path
 from silero_vad import load_silero_vad, read_audio, get_speech_timestamps
-from audiograbd.utils.transcode import EXTENSIONS
+from utils.transcode import EXTENSIONS
 
 logger = logging.getLogger(__name__)
 
