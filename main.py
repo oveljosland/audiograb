@@ -1,5 +1,10 @@
-# Run with:
-# uv run main.py
+"""
+Run with:
+	uv run main.py
+
+Run and serve processed files:
+	uv run main.py --serve-port 9000
+"""
 
 import os
 import time
