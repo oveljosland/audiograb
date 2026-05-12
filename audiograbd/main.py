@@ -68,9 +68,13 @@ if __name__ == "__main__":
 
 	start_time = time.time()
 
-	parser = argparse.ArgumentParser(description="audiograbd - extract, process, and upload audio from embedded wildlife recorders")
-	parser.add_argument('--serve-port', type=int, default=None, 
-		help="Start a web server to browse processed files")
+	parser = argparse.ArgumentParser(
+		description=
+		"audiograbd - process and transmit data from wildlife recorders"
+	)
+	parser.add_argument(
+		'--serve-port', type=int, default=None, help="Serve processed files"
+	)
 	args = parser.parse_args()
 
 
@@ -86,28 +90,28 @@ if __name__ == "__main__":
 		halt()
 
 	upload_dir = create_upload_dir(config)
+	result_dir = upload_dir / "results"
 	data_dir = upload_dir / "data"
 	logs_dir = upload_dir / "logs"
-	bird_dir = upload_dir / "results"
+	
 
 	project_name = config.get('project_name', 'audiograb')
 	configure_logging(config, file=logs_dir / f"{project_name}.log")
 	
 
 	try:
-		logger.info(f"Transferring data from all removable devices...")
-		offload_start = time.time()
+		start = time.time()
 		moved = transfer_from_all(data_dir, copy=True)
 		logger.info(f"Offloaded {len(moved)} files in {time.time() - offload_start:.2f} seconds")
 	except RuntimeError as e:
-		logger.error(f"Failed to offload to {upload_dir}: {e}")
+		logger.error(f"Failed transfer to {upload_dir}: {e}")
 
 
 	birdnet = config.get("birdnet", {})
 	if birdnet.get("enabled", False):
 		logger.info("birdnet-analyzer enabled")
 		try:
-			birdnet_analyse(data_dir, bird_dir)
+			birdnet_analyse(data_dir, result_dir)
 
 		except Exception as e:
 			logger.error(f"birdnet-analyzer failed: {e}")
