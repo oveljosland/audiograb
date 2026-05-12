@@ -113,7 +113,7 @@ def unmount_all_partitions(path):
 
 
 
-def move_files(mount_points, destination):
+def transfer(mount_points, destination, copy=False):
 	"""Move all files from the mount points to `destination`.
 	Returns a list of the absolute destination paths.
 	"""
@@ -130,7 +130,10 @@ def move_files(mount_points, destination):
 		if src_root.is_file():
 			target = destination_path / src_root.name
 			target.parent.mkdir(parents=True, exist_ok=True)
-			shutil.move(str(src_root), str(target))
+			if copy:
+				shutil.copy2(str(src_root), str(target))
+			else:
+				shutil.move(str(src_root), str(target))
 			moved_files.append(str(target.resolve()))
 			continue
 
@@ -141,15 +144,19 @@ def move_files(mount_points, destination):
 			relative_path = src.relative_to(src_root)
 			target = destination_path / relative_path
 			target.parent.mkdir(parents=True, exist_ok=True)
-			shutil.move(str(src), str(target))
+			if copy:
+				shutil.copy2(str(src_root), str(target))
+			else:
+				shutil.move(str(src_root), str(target))
 			moved_files.append(str(target.resolve()))
 
 	return moved_files
 
 
 
-def offload_to(dst):
+def transfer_from_all(dst, copy=False):
 	"""Move all files from all removable devices to `dst`.
+	Files will be kept if copy is True.
 	Returns a list of the absolute destination paths.
 	"""
 	device_paths = get_removable_devices()
@@ -166,7 +173,12 @@ def offload_to(dst):
 		mount_points = mount_all_partitions(device_path)
 		logger.info(f"Mount points for {device_path}: {mount_points}")
 
-		moved.extend(move_files(mount_points, dst))
+		if copy:
+			logger.info(f"Copying data from to {dst}")
+		else:
+			logger.info(f"Moving data from to {dst}")
+
+		moved.extend(transfer(mount_points, dst, copy=copy))
 
 	logger.info(f"Moved {len(moved)} files to: {dst}")
 	return moved

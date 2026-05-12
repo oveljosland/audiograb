@@ -15,7 +15,7 @@ from pathlib import Path
 
 from audiograbd.utils.logger import configure_logging
 from audiograbd.utils.wakealarm import set_wakealarm, disable_wakealarm
-from audiograbd.utils.device import offload_to, copy_testmedia_to_removable_devices
+from audiograbd.utils.device import transfer_from_all
 from audiograbd.utils.transcode import transcode
 from audiograbd.utils.config import load_config, load_backup
 from audiograbd.utils.storage import GCSProvider, Sigma2Provider
@@ -49,8 +49,6 @@ def halt():
 
 
 
-
-
 def create_upload_dir(config):
 	"""Create upload dir in `/tmp` with a project name,
 	timestamp and UUID. The upload dir is not peristent."""
@@ -75,8 +73,6 @@ if __name__ == "__main__":
 		help="Start a web server to browse processed files")
 	args = parser.parse_args()
 
-	
-	logger.info("Loading config...")
 
 	try:
 		#config = load_config()
@@ -92,20 +88,16 @@ if __name__ == "__main__":
 	upload_dir = create_upload_dir(config)
 	data_dir = upload_dir / "data"
 	logs_dir = upload_dir / "logs"
+	bird_dir = upload_dir / "results"
 
 	project_name = config.get('project_name', 'audiograb')
 	configure_logging(config, file=logs_dir / f"{project_name}.log")
 	
-	
-	
-
-	# put test media on all connected removable devices
-	copy_testmedia_to_removable_devices()
 
 	try:
-		logger.info(f"Offloading data from all removable devices...")
+		logger.info(f"Transferring data from all removable devices...")
 		offload_start = time.time()
-		moved = offload_to(data_dir)
+		moved = transfer_from_all(data_dir, copy=True)
 		logger.info(f"Offloaded {len(moved)} files in {time.time() - offload_start:.2f} seconds")
 	except RuntimeError as e:
 		logger.error(f"Failed to offload to {upload_dir}: {e}")
@@ -115,12 +107,12 @@ if __name__ == "__main__":
 	if birdnet.get("enabled", False):
 		logger.info("birdnet-analyzer enabled")
 		try:
-			subprocess.run(["uv", "run", "birdnet-analyser"])
+			birdnet_analyse(data_dir, bird_dir)
 
 		except Exception as e:
-			logger.error(f"BirdNET failed: {e}")
+			logger.error(f"birdnet-analyzer failed: {e}")
 	else:
-		logger.info("BirdNET prediction disabled")
+		logger.info("birdnet-analyzer disabled")
 	
 
 	silero = config.get("speech-removal", {})
@@ -128,14 +120,14 @@ if __name__ == "__main__":
 		logger.info("Speech removal enabled")
 		start = time.time()
 		try:
-			results = detect_and_mute(data_dir)
+			processed = detect_and_mute(data_dir)
 			logger.info(f"Speech segments muted ({time.time() - start:.2f}s)")
-			for p, ts in results.items():
+			for p, ts in processed.items():
 				logger.info(f"{Path(p).name}: {len(ts)} speech segments")
 		except Exception as e:
 			logger.error(f"Speech detection failed: {e}")
 	else:
-		logger.info("Speech detection disabled")
+		logger.info("Speech removal disabled")
 	
 	
 	start = time.time()
