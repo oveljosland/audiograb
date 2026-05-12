@@ -1,5 +1,3 @@
-# not (!/usr/bin/env python3)
-
 # python -m audiograbd.main
 
 import os
