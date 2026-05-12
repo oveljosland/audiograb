@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 CACHE_DIR = Path("~/.config/audiograbd/").expanduser()
 CACHED_CONFIG = CACHE_DIR / "config.json"
 REMOTE_CONFIG = "https://folk.ntnu.no/ovelj/config.json"
-BACKUP_CONFIG = "audiograbd/config/example.json"
+BACKUP_CONFIG = "../config/example.json"
 
 
 
