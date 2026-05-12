@@ -1,0 +1,6 @@
+requests
+google-cloud-storage
+silero-vad
+gpiozero
+torchcodec
+torchaudio<2.9
