@@ -1,4 +1,5 @@
-# python -m audiograbd.main
+# Run with:
+# uv run main.py
 
 import os
 import time
